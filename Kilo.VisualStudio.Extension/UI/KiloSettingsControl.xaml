@@ -1,0 +1,151 @@
+<UserControl x:Class="Kilo.VisualStudio.Extension.UI.KiloSettingsControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="450">
+    <Grid Background="#1E1E1E">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#252526" Padding="12,8" BorderThickness="0,0,0,1" BorderBrush="#3C3C3C">
+            <TextBlock Text="Kilo Settings" FontSize="14" FontWeight="SemiBold" Foreground="#EEEEEE" VerticalAlignment="Center"/>
+        </Border>
+
+        <!-- Settings content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="12,8">
+
+                <!-- Profile Section -->
+                <TextBlock Text="Profile" FontSize="12" FontWeight="SemiBold" Foreground="#EEEEEE" Margin="0,0,0,8"/>
+                <Border Background="#252526" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="Profile" FontSize="11" Foreground="#9CA3AF" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="ProfileComboBox" Background="#2D2D2D" Foreground="#CCCCCC" BorderBrush="#555" Height="26">
+                            <ComboBoxItem Content="Default" IsSelected="True"/>
+                            <ComboBoxItem Content="Architect"/>
+                            <ComboBoxItem Content="Coder"/>
+                            <ComboBoxItem Content="Debugger"/>
+                        </ComboBox>
+                    </StackPanel>
+                </Border>
+
+                <!-- Model Section -->
+                <TextBlock Text="Model" FontSize="12" FontWeight="SemiBold" Foreground="#EEEEEE" Margin="0,0,0,8"/>
+                <Border Background="#252526" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="Provider / Model" FontSize="11" Foreground="#9CA3AF" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="ModelComboBox" Background="#2D2D2D" Foreground="#CCCCCC" BorderBrush="#555" Height="26">
+                            <ComboBoxItem Content="OpenAI: gpt-4o" IsSelected="True"/>
+                            <ComboBoxItem Content="Anthropic: claude-3-5-sonnet"/>
+                            <ComboBoxItem Content="Google: gemini-2.0-flash"/>
+                            <ComboBoxItem Content="OpenAI: gpt-4o-mini"/>
+                        </ComboBox>
+                    </StackPanel>
+                </Border>
+
+                <!-- API Configuration -->
+                <TextBlock Text="API Configuration" FontSize="12" FontWeight="SemiBold" Foreground="#EEEEEE" Margin="0,0,0,8"/>
+                <Border Background="#252526" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="API Key" FontSize="11" Foreground="#9CA3AF" Margin="0,0,0,4"/>
+                        <PasswordBox x:Name="ApiKeyBox" Background="#2D2D2D" Foreground="#CCCCCC" BorderBrush="#555" Height="24" Padding="4,2"/>
+                        <TextBlock Text="Backend URL" FontSize="11" Foreground="#9CA3AF" Margin="0,8,0,4"/>
+                        <TextBox x:Name="BackendUrlBox" Text="http://localhost:8080" Background="#2D2D2D" Foreground="#CCCCCC" BorderBrush="#555" Height="24" Padding="4,2"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Behavior Section -->
+                <TextBlock Text="Behavior" FontSize="12" FontWeight="SemiBold" Foreground="#EEEEEE" Margin="0,0,0,8"/>
+                <Border Background="#252526" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,12">
+                    <StackPanel>
+                        <CheckBox x:Name="AutoApproveCheckBox" Content="Auto-approve tools by default" Foreground="#CCCCCC" FontSize="11" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="AutoScrollCheckBox" Content="Auto-scroll responses" Foreground="#CCCCCC" FontSize="11" IsChecked="True" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="SoundCheckBox" Content="Play sounds on completion" Foreground="#CCCCCC" FontSize="11" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="NotificationCheckBox" Content="Show notifications" Foreground="#CCCCCC" FontSize="11" IsChecked="True"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Editor Context -->
+                <TextBlock Text="Editor Context" FontSize="12" FontWeight="SemiBold" Foreground="#EEEEEE" Margin="0,0,0,8"/>
+                <Border Background="#252526" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,12">
+                    <StackPanel>
+                        <CheckBox x:Name="IncludeFileCheckBox" Content="Include active file in context" Foreground="#CCCCCC" FontSize="11" IsChecked="True" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="IncludeSelectionCheckBox" Content="Include selection in context" Foreground="#CCCCCC" FontSize="11" IsChecked="True" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="IncludeTerminalCheckBox" Content="Include terminal output in context" Foreground="#CCCCCC" FontSize="11" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="SemanticSearchCheckBox" Content="Enable semantic code search" Foreground="#CCCCCC" FontSize="11"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Keybindings Section -->
+                <TextBlock Text="Keybindings" FontSize="12" FontWeight="SemiBold" Foreground="#EEEEEE" Margin="0,0,0,8"/>
+                <Border Background="#252526" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,12">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="120"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Open Assistant" Foreground="#CCCCCC" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="Ctrl+Shift+K" Foreground="#9CA3AF" FontSize="11" HorizontalAlignment="Right"/>
+                        </Grid>
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="120"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Ask About Selection" Foreground="#CCCCCC" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="Ctrl+Shift+A" Foreground="#9CA3AF" FontSize="11" HorizontalAlignment="Right"/>
+                        </Grid>
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="120"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Ask About File" Foreground="#CCCCCC" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="Ctrl+Shift+F" Foreground="#9CA3AF" FontSize="11" HorizontalAlignment="Right"/>
+                        </Grid>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="120"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Cycle Agent Mode" Foreground="#CCCCCC" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="Ctrl+Shift+M" Foreground="#9CA3AF" FontSize="11" HorizontalAlignment="Right"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- About Section -->
+                <TextBlock Text="About" FontSize="12" FontWeight="SemiBold" Foreground="#EEEEEE" Margin="0,0,0,8"/>
+                <Border Background="#252526" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="8">
+                    <StackPanel>
+                        <TextBlock Text="Kilo for Visual Studio 2022" Foreground="#EEEEEE" FontSize="11" Margin="0,0,0,4"/>
+                        <TextBlock Text="Version 1.0.0" Foreground="#9CA3AF" FontSize="10"/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Footer actions -->
+        <Border Grid.Row="2" Background="#252526" Padding="12,8" BorderThickness="0,1,0,0" BorderBrush="#3C3C3C">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Button x:Name="ResetButton" Grid.Column="1" Content="Reset to Defaults" Width="120" Height="26" Margin="0,0,6,0"
+                        Background="#3C3C3C" Foreground="#CCCCCC" BorderThickness="0" FontSize="11" Click="ResetButton_Click"/>
+                <Button x:Name="SaveButton" Grid.Column="2" Content="Save" Width="70" Height="26"
+                        Background="#0E639C" Foreground="White" BorderThickness="0" FontSize="11" Click="SaveButton_Click"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

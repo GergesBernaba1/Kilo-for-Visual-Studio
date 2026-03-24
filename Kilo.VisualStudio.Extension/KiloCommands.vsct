@@ -5,26 +5,101 @@
 
   <Commands>
     <CommandPrefix guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0100" />
+    
+    <!-- Main assistant tool window -->
     <Button guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0100" priority="0x0100" type="Button">
       <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_TOOLS" />
       <Icon guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0101" />
       <Strings>
         <ButtonText>Open Kilo Assistant</ButtonText>
+        <LocCanonicalName>Kilo.OpenAssistant</LocCanonicalName>
       </Strings>
+      <KeyBindings>
+        <KeyBinding guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0100" key1="K" mod1="Control Shift" />
+      </KeyBindings>
     </Button>
+    
+    <!-- Ask about selection -->
     <Button guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0101" priority="0x0101" type="Button">
       <Parent guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0200" />
       <Icon guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0102" />
       <Strings>
         <ButtonText>Ask Kilo About Selection</ButtonText>
+        <LocCanonicalName>Kilo.AskSelection</LocCanonicalName>
       </Strings>
+      <KeyBindings>
+        <KeyBinding guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0101" key1="A" mod1="Control Shift" />
+      </KeyBindings>
     </Button>
+    
+    <!-- Ask about file -->
     <Button guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0102" priority="0x0102" type="Button">
       <Parent guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0200" />
       <Icon guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0103" />
       <Strings>
         <ButtonText>Ask Kilo About Current File</ButtonText>
+        <LocCanonicalName>Kilo.AskFile</LocCanonicalName>
       </Strings>
+      <KeyBindings>
+        <KeyBinding guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0102" key1="F" mod1="Control Shift" />
+      </KeyBindings>
+    </Button>
+    
+    <!-- Open Diff Viewer -->
+    <Button guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0103" priority="0x0103" type="Button">
+      <Parent guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0200" />
+      <Strings>
+        <ButtonText>Open Diff Viewer</ButtonText>
+        <LocCanonicalName>Kilo.OpenDiffViewer</LocCanonicalName>
+      </Strings>
+    </Button>
+    
+    <!-- Open Session History -->
+    <Button guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0104" priority="0x0104" type="Button">
+      <Parent guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0200" />
+      <Strings>
+        <ButtonText>Session History</ButtonText>
+        <LocCanonicalName>Kilo.OpenSessionHistory</LocCanonicalName>
+      </Strings>
+      <KeyBindings>
+        <KeyBinding guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0104" key1="H" mod1="Control Shift" />
+      </KeyBindings>
+    </Button>
+    
+    <!-- Open Settings -->
+    <Button guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0105" priority="0x0105" type="Button">
+      <Parent guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0200" />
+      <Strings>
+        <ButtonText>Kilo Settings</ButtonText>
+        <LocCanonicalName>Kilo.OpenSettings</LocCanonicalName>
+      </Strings>
+      <KeyBindings>
+        <KeyBinding guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0105" key1="," mod1="Control" />
+      </KeyBindings>
+    </Button>
+    
+    <!-- Cycle Agent Mode -->
+    <Button guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0107" priority="0x0107" type="Button">
+      <Parent guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0200" />
+      <Strings>
+        <ButtonText>Cycle Agent Mode</ButtonText>
+        <LocCanonicalName>Kilo.CycleAgentMode</LocCanonicalName>
+      </Strings>
+      <KeyBindings>
+        <KeyBinding guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0107" key1="M" mod1="Control Shift" />
+      </KeyBindings>
+    </Button>
+    
+    <!-- New Session -->
+    <Button guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0109" priority="0x0109" type="Button">
+      <Parent guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0200" />
+      <Strings>
+        <ButtonText>New Session</ButtonText>
+        <LocCanonicalName>Kilo.NewSession</LocCanonicalName>
+      </Strings>
+      <KeyBindings>
+        <KeyBinding guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0109" key1="N" mod1="Control Shift" />
+      </KeyBindings>
     </Button>
   </Commands>
 
@@ -47,6 +122,11 @@
       <IDSymbol name="cmdidOpenAssistantToolWindow" value="0x0100" />
       <IDSymbol name="cmdidAskSelection" value="0x0101" />
       <IDSymbol name="cmdidAskFile" value="0x0102" />
+      <IDSymbol name="cmdidOpenDiffViewer" value="0x0103" />
+      <IDSymbol name="cmdidOpenSessionHistory" value="0x0104" />
+      <IDSymbol name="cmdidOpenSettings" value="0x0105" />
+      <IDSymbol name="cmdidCycleAgentMode" value="0x0107" />
+      <IDSymbol name="cmdidNewSession" value="0x0109" />
       <IDSymbol name="idsKiloAssistantGroup" value="0x0200" />
       <IDSymbol name="bmpKilo16" value="0x0101" />
     </GuidSymbol>

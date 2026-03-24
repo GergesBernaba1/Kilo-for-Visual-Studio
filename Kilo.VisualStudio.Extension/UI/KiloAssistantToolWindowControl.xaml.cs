@@ -596,5 +596,25 @@ namespace Kilo.VisualStudio.Extension.UI
         public event EventHandler<string>? DeleteSessionRequested;
         public event EventHandler<IReadOnlyList<FileDiffViewModel>>? ApplyDiffsRequested;
         public event EventHandler<string>? RevertRequested;
+
+        // ── Public methods for external callers ───────────────────────────────────
+
+        public void CycleAgentMode()
+        {
+            var modes = new[] { "Default", "Architect", "Coder", "Debugger" };
+            var currentMode = _settings?.Profile ?? "Default";
+            var currentIndex = Array.IndexOf(modes, currentMode);
+            var newIndex = (currentIndex + 1) % modes.Length;
+            if (_settings != null)
+            {
+                _settings.Profile = modes[newIndex];
+                SetStatus($"Mode changed to: {modes[newIndex]}");
+            }
+        }
+
+        public void CreateNewSession()
+        {
+            NewSessionButton_Click(this, new RoutedEventArgs());
+        }
     }
 }

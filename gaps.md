@@ -42,11 +42,17 @@ Threading analyzer warnings around UI-thread access in Kilo.VisualStudio.Extensi
 Recommended implementation plan
 
 Phase 0 - Re-baseline architecture: stop treating this as a simple REST assistant; define a Visual Studio host adapter for the real Kilo backend/session protocol used by packages/kilo-vscode/src/extension.ts, including session lifecycle, reconnects, event streaming, diff events, and tool execution.
+
 Phase 1 - Host shell parity: build proper Visual Studio surfaces that map to the VS Code product: docked tool window, document-tab chat view, diff viewer window, settings/profile window, session history window, and command/keybinding set tailored for VS 2022+.
+
 Phase 2 - Core agent parity: implement persistent conversations, multi-session management, mode switching, auto-approve, context accumulation, prompt history, and restore-on-reopen behavior.
+
 Phase 3 - IDE integrations: add real editor context menu actions, code actions/lightbulbs, terminal integration, git context capture, file/diff/workspace context ingestion, and proper apply-patch support through Visual Studio text buffer APIs.
+
 Phase 4 - Non-agent product features: add model/provider selection, authentication/account flows, settings UI, notifications/sounds, localization, cloud history, commit message generation, code review UI, and repo initialization/custom command support.
+
 Phase 5 - Advanced capabilities: add inline autocomplete, semantic indexing/search, MCP Hub/marketplace, browser automation, skills system, file/image attachments, and sub-agent visualization.
+
 Phase 6 - Hardening and release: secure secret storage, telemetry/privacy compliance, accessibility pass, performance tuning, VS integration tests, UI automation tests, packaging cleanup, signed VSIX generation, and marketplace-ready metadata/resources.
 Suggested milestone breakdown
 

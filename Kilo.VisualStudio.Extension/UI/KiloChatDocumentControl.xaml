@@ -1,0 +1,68 @@
+<UserControl x:Class="Kilo.VisualStudio.Extension.UI.KiloChatDocumentControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="800">
+    <Grid Background="#1E1E1E">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#252526" Padding="12,8" BorderThickness="0,0,0,1" BorderBrush="#3C3C3C">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Kilo Chat" FontSize="14" FontWeight="SemiBold" Foreground="#EEEEEE" VerticalAlignment="Center"/>
+                <TextBlock x:Name="ModeLabel" Grid.Column="1" Text="Default Mode" FontSize="11" Foreground="#9CA3AF" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                <TextBlock x:Name="SessionLabel" Grid.Column="2" Text="No active session" FontSize="10" Foreground="#6B7280" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- Chat content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" x:Name="ChatScrollViewer">
+            <StackPanel Margin="12,8" x:Name="ChatPanel">
+                <!-- Messages will be added here dynamically -->
+                <TextBlock x:Name="WelcomeMessage" Text="Welcome to Kilo Chat. Press Ctrl+Enter to send your message." 
+                           Foreground="#9CA3AF" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Input area -->
+        <Border Grid.Row="2" Background="#252526" Padding="12,8" BorderThickness="0,1,0,0" BorderBrush="#3C3C3C">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBox x:Name="PromptTextBox" Grid.Row="0"
+                         MinHeight="60" MaxHeight="160"
+                         TextWrapping="Wrap" AcceptsReturn="True"
+                         VerticalScrollBarVisibility="Auto"
+                         Background="#2D2D2D" Foreground="#EEEEEE"
+                         BorderBrush="#555" BorderThickness="1"
+                         Padding="8,6" FontSize="12"
+                         KeyDown="PromptTextBox_KeyDown"/>
+                <Grid Grid.Row="1" Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="StatusText" Grid.Column="0" Text="" FontSize="10" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                    <Button x:Name="ClearButton" Grid.Column="1" Content="Clear" Width="60" Height="24" Margin="0,0,6,0"
+                            Background="#3C3C3C" Foreground="#CCCCCC" BorderThickness="0" FontSize="10" Click="ClearButton_Click"/>
+                    <Button x:Name="SendButton" Grid.Column="2" Content="Send" Width="70" Height="24"
+                            Background="#0E639C" Foreground="White" BorderThickness="0" FontSize="10" Click="SendButton_Click"/>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

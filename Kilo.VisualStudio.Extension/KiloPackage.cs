@@ -23,6 +23,9 @@ namespace Kilo.VisualStudio.Extension
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideToolWindow(typeof(KiloAssistantToolWindowPane))]
+    [ProvideToolWindow(typeof(KiloDiffViewerWindowPane))]
+    [ProvideToolWindow(typeof(KiloSessionHistoryWindowPane))]
+    [ProvideToolWindow(typeof(KiloSettingsWindowPane))]
     [Guid(PackageGuids.PackageGuidString)]
     public sealed class KiloPackage : AsyncPackage
     {
@@ -226,6 +229,26 @@ namespace Kilo.VisualStudio.Extension
                 commandService.AddCommand(new MenuCommand(
                     (s, e) => _ = AskFileAsync(),
                     new CommandID(packageGuid, PackageCommandSet.AskFile)));
+
+                commandService.AddCommand(new MenuCommand(
+                    (s, e) => _ = OpenDiffViewerWindowAsync(),
+                    new CommandID(packageGuid, PackageCommandSet.OpenDiffViewer)));
+
+                commandService.AddCommand(new MenuCommand(
+                    (s, e) => _ = OpenSessionHistoryWindowAsync(),
+                    new CommandID(packageGuid, PackageCommandSet.OpenSessionHistory)));
+
+                commandService.AddCommand(new MenuCommand(
+                    (s, e) => _ = OpenSettingsWindowAsync(),
+                    new CommandID(packageGuid, PackageCommandSet.OpenSettings)));
+
+                commandService.AddCommand(new MenuCommand(
+                    (s, e) => _ = CycleAgentModeAsync(),
+                    new CommandID(packageGuid, PackageCommandSet.CycleAgentMode)));
+
+                commandService.AddCommand(new MenuCommand(
+                    (s, e) => _ = NewSessionAsync(),
+                    new CommandID(packageGuid, PackageCommandSet.NewSession)));
             }
         }
 
@@ -282,6 +305,64 @@ namespace Kilo.VisualStudio.Extension
                 var filePath = GetActiveFilePath();
                 control.SetContext(filePath, GetActiveSelection(), GetActiveLanguageId());
                 control.SetPrompt($"Analyze this file and explain what it does: {filePath}");
+            }
+        }
+
+        private async Task OpenDiffViewerWindowAsync()
+        {
+            await this.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            var window = FindToolWindow(typeof(KiloDiffViewerWindowPane), 0, true);
+            if (window?.Frame == null)
+                throw new NotSupportedException("Cannot create Kilo Diff Viewer window.");
+
+            var frame = (IVsWindowFrame)window.Frame;
+            Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(frame.Show());
+        }
+
+        private async Task OpenSessionHistoryWindowAsync()
+        {
+            await this.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            var window = FindToolWindow(typeof(KiloSessionHistoryWindowPane), 0, true);
+            if (window?.Frame == null)
+                throw new NotSupportedException("Cannot create Kilo Session History window.");
+
+            var frame = (IVsWindowFrame)window.Frame;
+            Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(frame.Show());
+        }
+
+        private async Task OpenSettingsWindowAsync()
+        {
+            await this.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            var window = FindToolWindow(typeof(KiloSettingsWindowPane), 0, true);
+            if (window?.Frame == null)
+                throw new NotSupportedException("Cannot create Kilo Settings window.");
+
+            var frame = (IVsWindowFrame)window.Frame;
+            Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(frame.Show());
+        }
+
+        private async Task CycleAgentModeAsync()
+        {
+            await OpenToolWindowAsync();
+
+            var window = FindToolWindow(typeof(KiloAssistantToolWindowPane), 0, false);
+            if (window?.Content is UI.KiloAssistantToolWindowControl control)
+            {
+                control.CycleAgentMode();
+            }
+        }
+
+        private async Task NewSessionAsync()
+        {
+            await OpenToolWindowAsync();
+
+            var window = FindToolWindow(typeof(KiloAssistantToolWindowPane), 0, false);
+            if (window?.Content is UI.KiloAssistantToolWindowControl control)
+            {
+                control.CreateNewSession();
             }
         }
 

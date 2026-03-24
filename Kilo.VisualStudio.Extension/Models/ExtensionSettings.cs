@@ -10,6 +10,18 @@ namespace Kilo.VisualStudio.Extension.Models
         public string BackendPassword { get; set; } = string.Empty;
         public bool UseMockBackend { get; set; } = true;
         public string BackendUrl { get; set; } = "http://127.0.0.1:4096";
+        public string Profile { get; set; } = "Default";
+        public string Model { get; set; } = "OpenAI: gpt-4o";
+        public bool AutoApproveTools { get; set; } = false;
+        public bool AutoScrollResponses { get; set; } = true;
+        public bool PlaySounds { get; set; } = false;
+        public bool ShowNotifications { get; set; } = true;
+        public bool IncludeActiveFile { get; set; } = true;
+        public bool IncludeSelection { get; set; } = true;
+        public bool IncludeTerminalOutput { get; set; } = false;
+        public bool EnableSemanticSearch { get; set; } = false;
+        public string LastSessionId { get; set; } = string.Empty;
+        public string LastProfile { get; set; } = "Default";
 
         private static string SettingsFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Kilo.VisualStudio");
         private static string SettingsFile => Path.Combine(SettingsFolder, "settings.json");
