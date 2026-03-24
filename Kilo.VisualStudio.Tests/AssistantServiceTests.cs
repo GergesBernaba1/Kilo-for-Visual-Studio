@@ -245,7 +245,7 @@ namespace Kilo.VisualStudio.Tests
             {
                 BaseUrl = "http://127.0.0.1:4096",
                 Password = "test"
-            });
+            }, null);
 
             var request = new AssistantRequest
             {
@@ -267,7 +267,7 @@ namespace Kilo.VisualStudio.Tests
         public async Task MockSessionHostAdapter_StreamsArtifactsThroughAssistantService()
         {
             var sessionHostAdapter = new MockKiloSessionHostAdapter();
-            var assistant = new AssistantService(sessionHostAdapter, () => new KiloServerEndpoint());
+            var assistant = new AssistantService(sessionHostAdapter, () => new KiloServerEndpoint(), null);
 
             var request = new AssistantRequest
             {

@@ -25,6 +25,7 @@ namespace Kilo.VisualStudio.App.Services
         private readonly IKiloBackendClient? _backendClient;
         private readonly IKiloSessionHostAdapter? _sessionHostAdapter;
         private readonly Func<KiloServerEndpoint>? _endpointFactory;
+        private readonly AgentModeService? _agentModeService;
 
         // ── Streaming callbacks (live UI) ──────────────────────────────────────────
 
@@ -51,6 +52,13 @@ namespace Kilo.VisualStudio.App.Services
         {
             _sessionHostAdapter = sessionHostAdapter ?? throw new ArgumentNullException(nameof(sessionHostAdapter));
             _endpointFactory = endpointFactory ?? throw new ArgumentNullException(nameof(endpointFactory));
+        }
+
+        public AssistantService(IKiloSessionHostAdapter sessionHostAdapter, Func<KiloServerEndpoint> endpointFactory, AgentModeService agentModeService)
+        {
+            _sessionHostAdapter = sessionHostAdapter ?? throw new ArgumentNullException(nameof(sessionHostAdapter));
+            _endpointFactory = endpointFactory ?? throw new ArgumentNullException(nameof(endpointFactory));
+            _agentModeService = agentModeService;
         }
 
         // ── Public API ─────────────────────────────────────────────────────────────
@@ -126,7 +134,8 @@ namespace Kilo.VisualStudio.App.Services
                 ActiveFilePath = request.ActiveFilePath,
                 SelectedText = request.SelectedText,
                 LanguageId = request.LanguageId,
-                Prompt = request.Prompt
+                Prompt = request.Prompt,
+                Agent = _agentModeService?.CurrentModeDefinition.Id ?? "default"
             };
 
             return await SendAndCollectAsync(session.SessionId, chatRequest, linkedCts.Token);

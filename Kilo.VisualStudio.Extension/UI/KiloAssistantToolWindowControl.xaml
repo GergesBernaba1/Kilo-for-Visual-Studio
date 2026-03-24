@@ -45,8 +45,23 @@
                            VerticalAlignment="Center"
                            AutomationProperties.Name="Kilo Assistant Header"/>
 
-                <!-- Connection badge -->
+                <!-- Connection badge and mode indicator -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
+                    <!-- Mode indicator -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
+                        <TextBlock x:Name="ModeIcon"
+                                   Text="🤖"
+                                   FontSize="12" Margin="0,0,4,0"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock x:Name="ModeLabel"
+                                   Text="Default"
+                                   Foreground="#9CA3AF"
+                                   FontSize="11"
+                                   VerticalAlignment="Center"
+                                   AutomationProperties.Name="Current mode label"/>
+                    </StackPanel>
+
+                    <!-- Connection status -->
                     <Ellipse x:Name="ConnectionDot" Width="8" Height="8"
                              Fill="{StaticResource DisconnectedBrush}"
                              VerticalAlignment="Center"/>
@@ -145,6 +160,19 @@
                                      FontFamily="Consolas"
                                      Visibility="Collapsed"/>
                         </Grid>
+                    </Border>
+                </StackPanel>
+
+                <!-- Mode restrictions -->
+                <StackPanel Margin="0,0,0,8">
+                    <TextBlock Text="Mode Tools" FontSize="11" FontWeight="SemiBold"
+                               Foreground="#9CA3AF" Margin="0,0,0,2"/>
+                    <Border Background="#2D2D2D" BorderBrush="#3C3C3C"
+                            BorderThickness="1" CornerRadius="3" Padding="6,4">
+                        <TextBlock x:Name="ModeToolsText"
+                                   Text="All tools available"
+                                   Foreground="#AAAAAA" FontSize="11"
+                                   TextWrapping="Wrap"/>
                     </Border>
                 </StackPanel>
 

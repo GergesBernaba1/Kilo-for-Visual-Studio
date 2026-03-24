@@ -33,6 +33,7 @@ namespace Kilo.VisualStudio.Extension
         private readonly KiloLogger _logger = new KiloLogger();
         private static AutocompleteService? _autocompleteServiceInstance;
         private static AutomationService? _automationServiceInstance;
+        private static AgentModeService? _agentModeServiceInstance;
 
         // Service layer – either mock or real depending on settings.
         private KiloConnectionService? _connectionService;
@@ -40,10 +41,12 @@ namespace Kilo.VisualStudio.Extension
         private AssistantService? _assistantService;
         private AutocompleteService? _autocompleteService;
         private AutomationService? _automationService;
+        private AgentModeService? _agentModeService;
         private VSAutomationExecutor? _vsAutomationExecutor;
 
         public static AutocompleteService? AutocompleteServiceInstance => _autocompleteServiceInstance;
         public static AutomationService? AutomationServiceInstance => _automationServiceInstance;
+        public static AgentModeService? AgentModeServiceInstance => _agentModeServiceInstance;
 
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
@@ -53,17 +56,28 @@ namespace Kilo.VisualStudio.Extension
             // Get DTE service
             var dte = (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
 
+            // Wire up debugging events for mode switching
+            dte.Events.DebuggerEvents.OnEnterBreakMode += OnDebuggerEnterBreakMode;
+            dte.Events.DebuggerEvents.OnEnterRunMode += OnDebuggerEnterRunMode;
+            // dte.Events.DebuggerEvents.OnExceptionThrown += OnDebuggerExceptionThrown;
+
             if (_extensionSettings.UseMockBackend)
             {
                 // ── Mock path: no CLI process needed. ──────────────────────────
                 _mockAdapter = new MockKiloSessionHostAdapter();
-                _assistantService = new AssistantService(_mockAdapter, () => new KiloServerEndpoint());
+                _assistantService = new AssistantService(_mockAdapter, () => new KiloServerEndpoint(), _agentModeService);
                 _mockAdapter.SessionEventReceived += OnSessionEvent;
                 _autocompleteService = new AutocompleteService(GetWorkspaceDirectory());
                 _automationService = new AutomationService(GetWorkspaceDirectory());
                 _autocompleteServiceInstance = _autocompleteService;
                 _automationServiceInstance = _automationService;
                 _vsAutomationExecutor = new VSAutomationExecutor(dte, _automationService);
+                _agentModeService = new AgentModeService(GetWorkspaceDirectory(), modeName => {
+                    _extensionSettings.Profile = modeName;
+                    _extensionSettings.Save();
+                });
+                _agentModeService.SetCurrentModeFromSettings(_extensionSettings.Profile);
+                _agentModeServiceInstance = _agentModeService;
             }
             else
             {
@@ -77,7 +91,7 @@ namespace Kilo.VisualStudio.Extension
                 // before connecting (it throws). Use a lazy wrapper that resolves at request time.
                 var realAdapter = new LazyConnectionAdapter(_connectionService);
                 _assistantService = new AssistantService(realAdapter,
-                    () => _connectionService.ServerInstance?.ToEndpoint() ?? new KiloServerEndpoint());
+                    () => _connectionService.ServerInstance?.ToEndpoint() ?? new KiloServerEndpoint(), _agentModeService);
 
                 // Create backend client for autocomplete
                 var httpClient = new System.Net.Http.HttpClient();
@@ -91,6 +105,12 @@ namespace Kilo.VisualStudio.Extension
                 _autocompleteServiceInstance = _autocompleteService;
                 _automationServiceInstance = _automationService;
                 _vsAutomationExecutor = new VSAutomationExecutor(dte, _automationService);
+                _agentModeService = new AgentModeService(GetWorkspaceDirectory(), modeName => {
+                    _extensionSettings.Profile = modeName;
+                    _extensionSettings.Save();
+                });
+                _agentModeService.SetCurrentModeFromSettings(_extensionSettings.Profile);
+                _agentModeServiceInstance = _agentModeService;
 
                 // Start connection eagerly so the UI shows its state quickly.
                 _ = _connectionService
@@ -409,6 +429,25 @@ namespace Kilo.VisualStudio.Extension
             {
                 control.CreateNewSession();
             }
+        }
+
+        // ── Debugging event handlers for mode switching ───────────────────────────
+
+        private void OnDebuggerEnterBreakMode(EnvDTE.dbgEventReason reason, ref EnvDTE.dbgExecutionAction action)
+        {
+            // Auto-switch to Debugger mode when hitting a breakpoint
+            _agentModeService?.AutoSwitchModeBasedOnContext("breakpoint");
+        }
+
+        private void OnDebuggerEnterRunMode(EnvDTE.dbgEventReason reason)
+        {
+            // Could potentially switch back to previous mode when resuming, but for now keep current mode
+        }
+
+        private void OnDebuggerExceptionThrown(string exceptionType, string name, int code, string description)
+        {
+            // Auto-switch to Debugger mode when an exception is thrown
+            _agentModeService?.AutoSwitchModeBasedOnContext("exception");
         }
 
         // ── Context helpers ─────────────────────────────────────────────────────────

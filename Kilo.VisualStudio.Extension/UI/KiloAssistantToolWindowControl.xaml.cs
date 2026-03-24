@@ -171,10 +171,31 @@ namespace Kilo.VisualStudio.Extension.UI
             BackendUrlText.Text = settings.BackendUrl;
             MockModeToggle.IsChecked = settings.UseMockBackend;
 
+            // Initialize mode display
+            var agentModeService = KiloPackage.AgentModeServiceInstance;
+            if (agentModeService != null)
+            {
+                UpdateModeDisplay(agentModeService.CurrentModeDefinition);
+                agentModeService.ModeChanged += OnAgentModeChanged;
+            }
+
             // Wire live streaming events.
             _assistantService.TextDeltaReceived += OnTextDelta;
             _assistantService.ToolExecutionChanged += OnToolExecutionChanged;
             _assistantService.DiffUpdated += OnDiffUpdated;
+        }
+
+        private void OnAgentModeChanged(object? sender, AgentMode mode)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                var agentModeService = KiloPackage.AgentModeServiceInstance;
+                if (agentModeService != null)
+                {
+                    UpdateModeDisplay(agentModeService.CurrentModeDefinition);
+                    SetStatus($"Mode switched to: {agentModeService.CurrentModeDefinition.Name}");
+                }
+            }, DispatcherPriority.Normal);
         }
 
         public void SetContext(string activeFilePath, string selectedText, string languageId)
@@ -601,14 +622,47 @@ namespace Kilo.VisualStudio.Extension.UI
 
         public void CycleAgentMode()
         {
-            var modes = new[] { "Default", "Architect", "Coder", "Debugger" };
-            var currentMode = _settings?.Profile ?? "Default";
-            var currentIndex = Array.IndexOf(modes, currentMode);
-            var newIndex = (currentIndex + 1) % modes.Length;
-            if (_settings != null)
+            var agentModeService = KiloPackage.AgentModeServiceInstance;
+            if (agentModeService != null)
             {
-                _settings.Profile = modes[newIndex];
-                SetStatus($"Mode changed to: {modes[newIndex]}");
+                agentModeService.CycleMode();
+                var currentModeDef = agentModeService.CurrentModeDefinition;
+                if (_settings != null)
+                {
+                    _settings.Profile = currentModeDef.Name;
+                }
+                UpdateModeDisplay(currentModeDef);
+                SetStatus($"Mode changed to: {currentModeDef.Name} - {currentModeDef.Description}");
+            }
+            else
+            {
+                // Fallback to old behavior
+                var modes = new[] { "Default", "Architect", "Coder", "Debugger" };
+                var currentMode = _settings?.Profile ?? "Default";
+                var currentIndex = Array.IndexOf(modes, currentMode);
+                var newIndex = (currentIndex + 1) % modes.Length;
+                if (_settings != null)
+                {
+                    _settings.Profile = modes[newIndex];
+                    SetStatus($"Mode changed to: {modes[newIndex]}");
+                }
+            }
+        }
+
+        private void UpdateModeDisplay(AgentModeDefinition modeDef)
+        {
+            if (ModeIcon != null && ModeLabel != null && ModeToolsText != null)
+            {
+                ModeIcon.Text = modeDef.Icon;
+                ModeLabel.Text = modeDef.Name;
+                ModeIcon.ToolTip = modeDef.Description;
+                ModeLabel.ToolTip = modeDef.Description;
+
+                // Update mode tools display
+                var toolsText = modeDef.AllowedTools.Length > 0
+                    ? $"Allowed tools: {string.Join(", ", modeDef.AllowedTools)}"
+                    : "All tools available";
+                ModeToolsText.Text = toolsText;
             }
         }
 
