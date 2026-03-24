@@ -12,6 +12,7 @@ namespace Kilo.VisualStudio.Extension
         public const int CycleAgentMode = 0x0107;
         public const int ClearChat = 0x0108;
         public const int NewSession = 0x0109;
+        public const int OpenAutomationToolWindow = 0x010A;
         public const int CommandSetGuid = 0x00000000;
     }
 }

@@ -21,30 +21,37 @@ using Task = System.Threading.Tasks.Task;
 namespace Kilo.VisualStudio.Extension
 {
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
-    [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideToolWindow(typeof(KiloAssistantToolWindowPane))]
     [ProvideToolWindow(typeof(KiloDiffViewerWindowPane))]
     [ProvideToolWindow(typeof(KiloSessionHistoryWindowPane))]
     [ProvideToolWindow(typeof(KiloSettingsWindowPane))]
+    [ProvideToolWindow(typeof(KiloAutomationToolWindowPane))]
     [Guid(PackageGuids.PackageGuidString)]
     public sealed class KiloPackage : AsyncPackage
     {
         private ExtensionSettings _extensionSettings = ExtensionSettings.Load();
         private readonly KiloLogger _logger = new KiloLogger();
         private static AutocompleteService? _autocompleteServiceInstance;
+        private static AutomationService? _automationServiceInstance;
 
         // Service layer – either mock or real depending on settings.
         private KiloConnectionService? _connectionService;
         private MockKiloSessionHostAdapter? _mockAdapter;
         private AssistantService? _assistantService;
         private AutocompleteService? _autocompleteService;
+        private AutomationService? _automationService;
+        private VSAutomationExecutor? _vsAutomationExecutor;
 
         public static AutocompleteService? AutocompleteServiceInstance => _autocompleteServiceInstance;
+        public static AutomationService? AutomationServiceInstance => _automationServiceInstance;
 
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
             await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             _logger.Info("Kilo Extension initializing…");
+
+            // Get DTE service
+            var dte = (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
 
             if (_extensionSettings.UseMockBackend)
             {
@@ -53,7 +60,10 @@ namespace Kilo.VisualStudio.Extension
                 _assistantService = new AssistantService(_mockAdapter, () => new KiloServerEndpoint());
                 _mockAdapter.SessionEventReceived += OnSessionEvent;
                 _autocompleteService = new AutocompleteService(GetWorkspaceDirectory());
+                _automationService = new AutomationService(GetWorkspaceDirectory());
                 _autocompleteServiceInstance = _autocompleteService;
+                _automationServiceInstance = _automationService;
+                _vsAutomationExecutor = new VSAutomationExecutor(dte, _automationService);
             }
             else
             {
@@ -77,7 +87,10 @@ namespace Kilo.VisualStudio.Extension
                     BackendUrl = _extensionSettings.BackendUrl
                 };
                 _autocompleteService = new AutocompleteService(GetWorkspaceDirectory(), backendClient);
+                _automationService = new AutomationService(GetWorkspaceDirectory(), backendClient, _vsAutomationExecutor);
                 _autocompleteServiceInstance = _autocompleteService;
+                _automationServiceInstance = _automationService;
+                _vsAutomationExecutor = new VSAutomationExecutor(dte, _automationService);
 
                 // Start connection eagerly so the UI shows its state quickly.
                 _ = _connectionService
@@ -265,6 +278,10 @@ namespace Kilo.VisualStudio.Extension
                 commandService.AddCommand(new MenuCommand(
                     (s, e) => _ = NewSessionAsync(),
                     new CommandID(packageGuid, PackageCommandSet.NewSession)));
+
+                commandService.AddCommand(new MenuCommand(
+                    (s, e) => _ = OpenAutomationWindowAsync(),
+                    new CommandID(packageGuid, PackageCommandSet.OpenAutomationToolWindow)));
             }
         }
 
@@ -355,6 +372,18 @@ namespace Kilo.VisualStudio.Extension
             var window = FindToolWindow(typeof(KiloSettingsWindowPane), 0, true);
             if (window?.Frame == null)
                 throw new NotSupportedException("Cannot create Kilo Settings window.");
+
+            var frame = (IVsWindowFrame)window.Frame;
+            Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(frame.Show());
+        }
+
+        private async Task OpenAutomationWindowAsync()
+        {
+            await this.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            var window = FindToolWindow(typeof(KiloAutomationToolWindowPane), 0, true);
+            if (window?.Frame == null)
+                throw new NotSupportedException("Cannot create Kilo Automation window.");
 
             var frame = (IVsWindowFrame)window.Frame;
             Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(frame.Show());

@@ -1,0 +1,135 @@
+<UserControl x:Class="Kilo.VisualStudio.Extension.UI.KiloAutomationToolWindowControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="800"
+             Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar -->
+        <ToolBar Grid.Row="0" Height="30">
+            <Button x:Name="NewTemplateButton" Content="New Template" Click="NewTemplateButton_Click" Margin="0,0,5,0"/>
+            <Button x:Name="RecordMacroButton" Content="Record Macro" Click="RecordMacroButton_Click" Margin="0,0,5,0"/>
+            <Button x:Name="StopRecordingButton" Content="Stop Recording" Click="StopRecordingButton_Click" Margin="0,0,5,0" IsEnabled="False"/>
+            <Separator/>
+            <Button x:Name="ExecuteButton" Content="Execute" Click="ExecuteButton_Click" Margin="0,0,5,0"/>
+            <Button x:Name="EditButton" Content="Edit" Click="EditButton_Click" Margin="0,0,5,0"/>
+            <Button x:Name="DeleteButton" Content="Delete" Click="DeleteButton_Click" Margin="0,0,5,0"/>
+            <Separator/>
+            <Button x:Name="ImportButton" Content="Import" Click="ImportButton_Click" Margin="0,0,5,0"/>
+            <Button x:Name="ExportButton" Content="Export" Click="ExportButton_Click" Margin="0,0,5,0"/>
+        </ToolBar>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="250"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Template List -->
+            <GroupBox Grid.Column="0" Header="Templates" Margin="5">
+                <ListBox x:Name="TemplatesListBox" SelectionChanged="TemplatesListBox_SelectionChanged">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding Description}" FontSize="10" Foreground="Gray"/>
+                                <TextBlock Text="{Binding Category}" FontSize="9" Foreground="DarkGray"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </GroupBox>
+
+            <!-- Splitter -->
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="LightGray"/>
+
+            <!-- Template Details and Editor -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Template Info -->
+                <GroupBox Grid.Row="0" Header="Template Details" Margin="5">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Label Grid.Row="0" Grid.Column="0" Content="Name:" Margin="0,0,5,5"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="TemplateNameTextBox" Margin="0,0,0,5"/>
+
+                        <Label Grid.Row="1" Grid.Column="0" Content="Description:" Margin="0,0,5,5"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="TemplateDescriptionTextBox" Margin="0,0,0,5"/>
+
+                        <Label Grid.Row="2" Grid.Column="0" Content="Category:" Margin="0,0,5,5"/>
+                        <ComboBox Grid.Row="2" Grid.Column="1" x:Name="TemplateCategoryComboBox" Margin="0,0,0,5">
+                            <ComboBoxItem Content="General"/>
+                            <ComboBoxItem Content="Testing"/>
+                            <ComboBoxItem Content="Building"/>
+                            <ComboBoxItem Content="Refactoring"/>
+                            <ComboBoxItem Content="Debugging"/>
+                            <ComboBoxItem Content="Macro"/>
+                        </ComboBox>
+                    </Grid>
+                </GroupBox>
+
+                <!-- Steps Editor -->
+                <GroupBox Grid.Row="1" Header="Steps" Margin="5">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <ListBox Grid.Row="0" x:Name="StepsListBox" Margin="0,0,0,5">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Description}" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding Type}" FontSize="10" Foreground="Gray"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <StackPanel Grid.Row="1" Orientation="Horizontal">
+                            <Button x:Name="AddStepButton" Content="Add Step" Click="AddStepButton_Click" Margin="0,0,5,0"/>
+                            <Button x:Name="EditStepButton" Content="Edit Step" Click="EditStepButton_Click" Margin="0,0,5,0"/>
+                            <Button x:Name="RemoveStepButton" Content="Remove Step" Click="RemoveStepButton_Click" Margin="0,0,5,0"/>
+                            <Button x:Name="MoveUpButton" Content="Move Up" Click="MoveUpButton_Click" Margin="0,0,5,0"/>
+                            <Button x:Name="MoveDownButton" Content="Move Down" Click="MoveDownButton_Click"/>
+                        </StackPanel>
+                    </Grid>
+                </GroupBox>
+            </Grid>
+        </Grid>
+
+        <!-- Status Bar -->
+        <StatusBar Grid.Row="2">
+            <StatusBarItem>
+                <TextBlock x:Name="StatusTextBlock" Text="Ready"/>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <TextBlock x:Name="RecordingStatusTextBlock" Text="" Foreground="Red" FontWeight="Bold"/>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</UserControl>

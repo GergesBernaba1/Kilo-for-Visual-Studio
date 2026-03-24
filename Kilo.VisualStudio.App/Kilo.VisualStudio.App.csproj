@@ -9,6 +9,7 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>false</ImplicitUsings>
+    <NoWarn>$(NoWarn);CS0067;CA1416;CS8601</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
