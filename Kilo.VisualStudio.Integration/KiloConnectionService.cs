@@ -96,7 +96,7 @@ namespace Kilo.VisualStudio.Integration
                 if (_connectTask != null) return _connectTask;
 
                 _workspaceDirectory = workspaceDirectory ?? string.Empty;
-                _connectTask = ConnectCoreAsync(workspaceDirectory, cancellationToken)
+                _connectTask = ConnectCoreAsync(_workspaceDirectory, cancellationToken)
                     .ContinueWith(t => { lock (_connectGate) { _connectTask = null; } }, TaskScheduler.Default);
 
                 return _connectTask;

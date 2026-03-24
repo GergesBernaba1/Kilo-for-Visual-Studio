@@ -5,6 +5,7 @@
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
+    <NoWarn>$(NoWarn);VSTHRD010;VSTHRD100;VSTHRD110;VSTHRD001;CS8618;CS8604;CS8603</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.2.484" />
+    <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.2.32505.173" />
     <Reference Include="System.Design" />
     <None Include="KiloCommands.vsct" />
     <None Include="source.extension.vsixmanifest" />

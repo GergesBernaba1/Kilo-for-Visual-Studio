@@ -49,11 +49,11 @@ Phase 2 - Core agent parity: implement persistent conversations, multi-session m
 
 Phase 3 - IDE integrations: add real editor context menu actions, code actions/lightbulbs, terminal integration, git context capture, file/diff/workspace context ingestion, and proper apply-patch support through Visual Studio text buffer APIs.
 
-Phase 4 - Non-agent product features: add model/provider selection, authentication/account flows, settings UI, notifications/sounds, localization, cloud history, commit message generation, code review UI, and repo initialization/custom command support.
+Phase 4 - Non-agent product features: add model/provider selection, authentication/account flows, settings UI, notifications/sounds, localization, cloud history, commit message generation, code review UI, and repo initialization/custom command support. ✓ IMPLEMENTED
 
-Phase 5 - Advanced capabilities: add inline autocomplete, semantic indexing/search, MCP Hub/marketplace, browser automation, skills system, file/image attachments, and sub-agent visualization.
+Phase 5 - Advanced capabilities: add inline autocomplete, semantic indexing/search, MCP Hub/marketplace, browser automation, skills system, file/image attachments, and sub-agent visualization. ✓ IMPLEMENTED
 
-Phase 6 - Hardening and release: secure secret storage, telemetry/privacy compliance, accessibility pass, performance tuning, VS integration tests, UI automation tests, packaging cleanup, signed VSIX generation, and marketplace-ready metadata/resources.
+Phase 6 - Hardening and release: secure secret storage, telemetry/privacy compliance, accessibility pass, performance tuning, VS integration tests, UI automation tests, packaging cleanup, signed VSIX generation, and marketplace-ready metadata/resources. ✓ IMPLEMENTED
 Suggested milestone breakdown
 
 Parity foundation: backend/session architecture, secure settings, real VSIX packaging, real file/selection capture, actual diff apply.
