@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -254,14 +255,21 @@ namespace Kilo.VisualStudio.Integration
             return Task.CompletedTask;
         }
 
-        public override Task<IReadOnlyList<KiloFileDiff>> GetSessionDiffAsync(string sessionId, string workspaceDirectory, CancellationToken cancellationToken)
+    public override Task<IReadOnlyList<KiloFileDiff>> GetSessionDiffAsync(string sessionId, string workspaceDirectory, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        IReadOnlyList<KiloFileDiff> diffs = _diffs.TryGetValue(sessionId, out var sessionDiffs)
+            ? sessionDiffs.ToList()
+            : new KiloFileDiff[0];
+        // Filter by workspaceDirectory to match the behavior of the real implementation
+        if (!string.IsNullOrWhiteSpace(workspaceDirectory))
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            IReadOnlyList<KiloFileDiff> diffs = _diffs.TryGetValue(sessionId, out var sessionDiffs)
-                ? sessionDiffs.ToList()
-                : new KiloFileDiff[0];
-            return Task.FromResult(diffs);
+            diffs = diffs.Where(d => string.Equals(d.FilePath, workspaceDirectory, StringComparison.OrdinalIgnoreCase) || 
+                                   d.FilePath.StartsWith(workspaceDirectory + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                        .ToList();
         }
+        return Task.FromResult(diffs);
+    }
 
         public override Task<IReadOnlyList<string>> GetRegisteredToolIdsAsync(string workspaceDirectory, CancellationToken cancellationToken)
         {

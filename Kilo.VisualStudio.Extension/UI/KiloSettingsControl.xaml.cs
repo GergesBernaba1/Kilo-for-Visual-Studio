@@ -6,7 +6,7 @@ namespace Kilo.VisualStudio.Extension.UI
 {
     public partial class KiloSettingsControl : UserControl
     {
-        private ExtensionSettings _settings;
+        private ExtensionSettings _settings = new ExtensionSettings();
 
         public KiloSettingsControl()
         {

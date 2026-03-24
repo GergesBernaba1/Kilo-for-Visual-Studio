@@ -36,42 +36,54 @@ namespace Kilo.VisualStudio.Integration
 
         public override KiloConnectionState ConnectionState => _connectionState;
 
-        public override async Task ConnectAsync(KiloServerEndpoint endpoint, string workspaceDirectory, CancellationToken cancellationToken)
+    public override async Task ConnectAsync(KiloServerEndpoint endpoint, string workspaceDirectory, CancellationToken cancellationToken)
+    {
+        if (endpoint == null) throw new ArgumentNullException(nameof(endpoint));
+
+        // If we're already connected to the same endpoint and workspace, do nothing
+        if (_connectionState == KiloConnectionState.Connected && 
+            _endpoint.BaseUrl == endpoint.BaseUrl &&
+            _endpoint.Username == endpoint.Username &&
+            _endpoint.Password == endpoint.Password &&
+            string.Equals(_workspaceDirectory, workspaceDirectory ?? string.Empty, StringComparison.OrdinalIgnoreCase))
         {
-            if (endpoint == null) throw new ArgumentNullException(nameof(endpoint));
-
-            await DisconnectAsync(CancellationToken.None);
-
-            _endpoint = endpoint;
-            _workspaceDirectory = workspaceDirectory ?? string.Empty;
-
-            ConfigureAuthorizationHeader();
-            await PingHealthAsync(cancellationToken);
-
-            var streamCancellation = new CancellationTokenSource();
-            lock (_gate)
-            {
-                _streamCancellation = streamCancellation;
-                _streamTask = RunEventStreamAsync(streamCancellation.Token);
-            }
-
-            var waitUntil = DateTimeOffset.UtcNow.AddSeconds(5);
-            while (_connectionState != KiloConnectionState.Connected && _connectionState != KiloConnectionState.Error)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                if (DateTimeOffset.UtcNow >= waitUntil)
-                {
-                    throw new TimeoutException("Timed out waiting for the Kilo event stream to connect.");
-                }
-
-                await Task.Delay(50, cancellationToken);
-            }
-
-            if (_connectionState == KiloConnectionState.Error)
-            {
-                throw new InvalidOperationException("Kilo event stream entered an error state during connect.");
-            }
+            return;
         }
+
+        await DisconnectAsync(CancellationToken.None);
+
+        _endpoint = endpoint;
+        _workspaceDirectory = workspaceDirectory ?? string.Empty;
+
+        ConfigureAuthorizationHeader();
+        await PingHealthAsync(cancellationToken);
+
+        var streamCancellation = new CancellationTokenSource();
+        lock (_gate)
+        {
+            // Cancel any existing stream task
+            _streamCancellation?.Cancel();
+            _streamCancellation = streamCancellation;
+            _streamTask = RunEventStreamAsync(streamCancellation.Token);
+        }
+
+        var waitUntil = DateTimeOffset.UtcNow.AddSeconds(5);
+        while (_connectionState != KiloConnectionState.Connected && _connectionState != KiloConnectionState.Error)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (DateTimeOffset.UtcNow >= waitUntil)
+            {
+                throw new TimeoutException("Timed out waiting for the Kilo event stream to connect.");
+            }
+
+            await Task.Delay(50, cancellationToken);
+        }
+
+        if (_connectionState == KiloConnectionState.Error)
+        {
+            throw new InvalidOperationException("Kilo event stream entered an error state during connect.");
+        }
+    }
 
         public override async Task DisconnectAsync(CancellationToken cancellationToken)
         {

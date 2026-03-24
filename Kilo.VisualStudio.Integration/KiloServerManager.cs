@@ -216,7 +216,7 @@ namespace Kilo.VisualStudio.Integration
             return instance;
         }
 
-        private string ResolveCliBinaryPath()
+        private string? ResolveCliBinaryPath()
         {
             // 1. Bundled binary alongside the extension DLLs.
             var binName = IsWindows() ? "kilo.exe" : "kilo";

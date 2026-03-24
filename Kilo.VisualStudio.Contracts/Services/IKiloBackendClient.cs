@@ -8,5 +8,7 @@ namespace Kilo.VisualStudio.Contracts.Services
         string? ApiKey { get; set; }
 
         Task<AssistantResponse> SendRequestAsync(AssistantRequest request);
+
+        Task<TResponse> SendGenericRequestAsync<TRequest, TResponse>(string endpoint, TRequest request);
     }
 }

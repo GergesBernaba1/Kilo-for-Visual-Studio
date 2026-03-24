@@ -20,6 +20,10 @@ namespace Kilo.VisualStudio.Extension.Models
         public bool IncludeSelection { get; set; } = true;
         public bool IncludeTerminalOutput { get; set; } = false;
         public bool EnableSemanticSearch { get; set; } = false;
+        public bool EnableInlineAutocomplete { get; set; } = true;
+        public string AutocompleteTriggerCharacters { get; set; } = ".";
+        public bool AutocompleteOnTyping { get; set; } = false;
+        public int AutocompleteDelayMs { get; set; } = 300;
         public string LastSessionId { get; set; } = string.Empty;
         public string LastProfile { get; set; } = "Default";
 

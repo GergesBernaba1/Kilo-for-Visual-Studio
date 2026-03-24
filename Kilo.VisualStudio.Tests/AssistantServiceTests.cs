@@ -27,6 +27,12 @@ namespace Kilo.VisualStudio.Tests
                     SuggestedCode = "// generated code"
                 });
             }
+
+            public Task<TResponse> SendGenericRequestAsync<TRequest, TResponse>(string endpoint, TRequest request)
+            {
+                // For tests, return default
+                return Task.FromResult(default(TResponse)!);
+            }
         }
 
         private sealed class FakeSessionHostAdapter : IKiloSessionHostAdapter

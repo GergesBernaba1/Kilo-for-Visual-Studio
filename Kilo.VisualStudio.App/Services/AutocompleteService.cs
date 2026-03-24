@@ -6,26 +6,31 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Kilo.VisualStudio.Contracts.Models;
+using Kilo.VisualStudio.Contracts.Services;
 
 namespace Kilo.VisualStudio.App.Services
 {
     public class AutocompleteService
     {
         private readonly string _workspaceRoot;
+        private readonly IKiloBackendClient? _backendClient;
         private readonly List<CompletionItem> _cachedCompletions = new List<CompletionItem>();
         private DateTimeOffset _lastIndexTime = DateTimeOffset.MinValue;
 
         public event EventHandler<IList<CompletionItem>>? CompletionsReady;
 
-        public AutocompleteService(string workspaceRoot)
+        public AutocompleteService(string workspaceRoot, IKiloBackendClient? backendClient = null)
         {
             _workspaceRoot = workspaceRoot;
+            _backendClient = backendClient;
         }
 
-        public Task<IList<CompletionItem>> GetCompletionsAsync(string filePath, int line, int column, string prefix)
+        public async Task<IList<CompletionItem>> GetCompletionsAsync(string filePath, int line, int column, string prefix)
         {
             var completions = new List<CompletionItem>();
 
+            // Add cached/project-based completions
             foreach (var completion in _cachedCompletions)
             {
                 if (completion.Label.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
@@ -39,7 +44,80 @@ namespace Kilo.VisualStudio.App.Services
                 completions.AddRange(GetCommonCompletions(prefix));
             }
 
-            return Task.FromResult<IList<CompletionItem>>(completions);
+            // Add AI-powered completions if backend is available
+            if (_backendClient != null)
+            {
+                try
+                {
+                    var aiCompletions = await GetAICompletionsAsync(filePath, line, column, prefix);
+                    completions.AddRange(aiCompletions);
+                }
+                catch
+                {
+                    // Fall back to cached completions if AI fails
+                }
+            }
+
+            return completions;
+        }
+
+        private async Task<IList<CompletionItem>> GetAICompletionsAsync(string filePath, int line, int column, string prefix)
+        {
+            if (_backendClient == null)
+                return Array.Empty<CompletionItem>();
+
+            // Get context around the current position
+            var context = GetContext(filePath, line, column);
+
+            var request = new AutocompleteRequest
+            {
+                FilePath = filePath,
+                LanguageId = GetLanguageId(filePath),
+                Line = line,
+                Column = column,
+                Prefix = prefix,
+                Context = context
+            };
+
+            // Assuming backend has an endpoint for autocomplete
+            // For now, simulate or use a generic request
+            // In real implementation, backend should support autocomplete endpoint
+            var response = await _backendClient.SendGenericRequestAsync<AutocompleteRequest, AutocompleteResponse>("autocomplete", request);
+
+            return response.Completions;
+        }
+
+        private string GetContext(string filePath, int line, int column)
+        {
+            try
+            {
+                var lines = File.ReadAllLines(filePath);
+                if (line < 0 || line >= lines.Length)
+                    return string.Empty;
+
+                var startLine = Math.Max(0, line - 5);
+                var endLine = Math.Min(lines.Length - 1, line + 5);
+                var contextLines = lines.Skip(startLine).Take(endLine - startLine + 1);
+                return string.Join(Environment.NewLine, contextLines);
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
+        private string GetLanguageId(string filePath)
+        {
+            var ext = Path.GetExtension(filePath).ToLower();
+            return ext switch
+            {
+                ".cs" => "csharp",
+                ".js" => "javascript",
+                ".ts" => "typescript",
+                ".py" => "python",
+                ".java" => "java",
+                _ => "plaintext"
+            };
         }
 
         public Task RefreshIndexAsync()
@@ -141,24 +219,5 @@ namespace Kilo.VisualStudio.App.Services
             };
             return common.Where(c => c.Label.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)).ToList();
         }
-    }
-
-    public class CompletionItem
-    {
-        public string Label { get; set; } = string.Empty;
-        public CompletionKind Kind { get; set; }
-        public string Detail { get; set; } = string.Empty;
-        public string InsertText { get; set; } = string.Empty;
-    }
-
-    public enum CompletionKind
-    {
-        Method,
-        Property,
-        Class,
-        Interface,
-        Keyword,
-        Variable,
-        Snippet
     }
 }

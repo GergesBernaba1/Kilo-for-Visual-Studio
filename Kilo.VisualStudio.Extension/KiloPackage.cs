@@ -31,11 +31,15 @@ namespace Kilo.VisualStudio.Extension
     {
         private ExtensionSettings _extensionSettings = ExtensionSettings.Load();
         private readonly KiloLogger _logger = new KiloLogger();
+        private static AutocompleteService? _autocompleteServiceInstance;
 
         // Service layer – either mock or real depending on settings.
         private KiloConnectionService? _connectionService;
         private MockKiloSessionHostAdapter? _mockAdapter;
         private AssistantService? _assistantService;
+        private AutocompleteService? _autocompleteService;
+
+        public static AutocompleteService? AutocompleteServiceInstance => _autocompleteServiceInstance;
 
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
@@ -48,6 +52,8 @@ namespace Kilo.VisualStudio.Extension
                 _mockAdapter = new MockKiloSessionHostAdapter();
                 _assistantService = new AssistantService(_mockAdapter, () => new KiloServerEndpoint());
                 _mockAdapter.SessionEventReceived += OnSessionEvent;
+                _autocompleteService = new AutocompleteService(GetWorkspaceDirectory());
+                _autocompleteServiceInstance = _autocompleteService;
             }
             else
             {
@@ -62,6 +68,16 @@ namespace Kilo.VisualStudio.Extension
                 var realAdapter = new LazyConnectionAdapter(_connectionService);
                 _assistantService = new AssistantService(realAdapter,
                     () => _connectionService.ServerInstance?.ToEndpoint() ?? new KiloServerEndpoint());
+
+                // Create backend client for autocomplete
+                var httpClient = new System.Net.Http.HttpClient();
+                var backendClient = new KiloBackendClient(httpClient, false)
+                {
+                    ApiKey = _extensionSettings.KiloApiKey,
+                    BackendUrl = _extensionSettings.BackendUrl
+                };
+                _autocompleteService = new AutocompleteService(GetWorkspaceDirectory(), backendClient);
+                _autocompleteServiceInstance = _autocompleteService;
 
                 // Start connection eagerly so the UI shows its state quickly.
                 _ = _connectionService

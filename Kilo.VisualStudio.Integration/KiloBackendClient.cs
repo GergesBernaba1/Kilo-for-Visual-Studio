@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -65,6 +66,41 @@ namespace Kilo.VisualStudio.Integration
                 Error = "Failed to deserialize backend response",
                 Message = responseBody
             };
+        }
+
+        public async Task<TResponse> SendGenericRequestAsync<TRequest, TResponse>(string endpoint, TRequest request)
+        {
+            if (_useMock)
+            {
+                // For mock, return empty or default for autocomplete
+                if (typeof(TResponse) == typeof(AutocompleteResponse))
+                {
+                    return (TResponse)(object)new AutocompleteResponse { Completions = new List<CompletionItem>() };
+                }
+                throw new NotImplementedException("Mock not implemented for this endpoint");
+            }
+
+            if (string.IsNullOrWhiteSpace(ApiKey))
+            {
+                throw new InvalidOperationException("API key not configured");
+            }
+
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ApiKey);
+
+            string jsonBody = JsonSerializer.Serialize(request);
+            using var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+
+            var url = $"{BackendUrl.TrimEnd('/')}/{endpoint}";
+            var response = await _httpClient.PostAsync(url, content);
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException($"Backend call failed: {response.StatusCode}");
+            }
+
+            var responseBody = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<TResponse>(responseBody);
+
+            return result ?? throw new JsonException("Failed to deserialize response");
         }
 
         private static AssistantResponse GenerateMockResponse(AssistantRequest request)
