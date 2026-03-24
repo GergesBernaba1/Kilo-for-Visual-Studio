@@ -1,0 +1,26 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.cs]
+indent_style = space
+indent_size = 4
+dotnet_sort_system_directives_first = true
+csharp_using_directive_placement = outside_namespace
+csharp_prefer_braces = true
+csharp_prefer_simple_using_statement = false
+csharp_style_namespace_declarations = file_scoped
+csharp_style_prefer_method_group_conversion = true
+csharp_style_prefer_switch_expression = true
+csharp_style_prefer_pattern_matching = true
+
+[*.{json,yaml,yml}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false

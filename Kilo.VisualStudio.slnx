@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Kilo.VisualStudio.App/Kilo.VisualStudio.App.csproj" />
+  <Project Path="Kilo.VisualStudio.Contracts/Kilo.VisualStudio.Contracts.csproj" />
+  <Project Path="Kilo.VisualStudio.Extension/Kilo.VisualStudio.Extension.csproj" />
+  <Project Path="Kilo.VisualStudio.Integration/Kilo.VisualStudio.Integration.csproj" />
+  <Project Path="Kilo.VisualStudio.Tests/Kilo.VisualStudio.Tests.csproj" />
+</Solution>

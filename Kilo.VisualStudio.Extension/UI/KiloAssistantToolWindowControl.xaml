@@ -1,0 +1,370 @@
+<UserControl x:Class="Kilo.VisualStudio.Extension.UI.KiloAssistantToolWindowControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="420">
+    <UserControl.Resources>
+        <!-- Connection badge colours -->
+        <SolidColorBrush x:Key="ConnectedBrush"    Color="#22C55E"/>
+        <SolidColorBrush x:Key="ConnectingBrush"   Color="#EAB308"/>
+        <SolidColorBrush x:Key="DisconnectedBrush" Color="#6B7280"/>
+        <SolidColorBrush x:Key="ErrorBrush"        Color="#EF4444"/>
+        <!-- Tool card colours -->
+        <SolidColorBrush x:Key="ToolPendingBrush"   Color="#6B7280"/>
+        <SolidColorBrush x:Key="ToolRunningBrush"   Color="#3B82F6"/>
+        <SolidColorBrush x:Key="ToolCompletedBrush" Color="#22C55E"/>
+        <SolidColorBrush x:Key="ToolFailedBrush"    Color="#EF4444"/>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- Header row: title + connection badge -->
+            <RowDefinition Height="Auto"/>
+            <!-- Session history bar -->
+            <RowDefinition Height="Auto"/>
+            <!-- Main scrollable body -->
+            <RowDefinition Height="*"/>
+            <!-- Bottom action bar -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ═══ HEADER ═══════════════════════════════════════════════════════════ -->
+        <Border Grid.Row="0" Background="#1E1E1E" Padding="10,6">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                           Text="Kilo Assistant"
+                           FontSize="15" FontWeight="SemiBold"
+                           Foreground="#EEEEEE"
+                           VerticalAlignment="Center"
+                           AutomationProperties.Name="Kilo Assistant Header"/>
+
+                <!-- Connection badge -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
+                    <Ellipse x:Name="ConnectionDot" Width="8" Height="8"
+                             Fill="{StaticResource DisconnectedBrush}"
+                             VerticalAlignment="Center"/>
+                    <TextBlock x:Name="ConnectionLabel"
+                               Text="Disconnected"
+                               Foreground="#9CA3AF"
+                               FontSize="11" Margin="4,0,0,0"
+                               VerticalAlignment="Center"
+                               AutomationProperties.Name="Connection status label"/>
+                    <Button x:Name="ReconnectButton"
+                            Content="↻" ToolTip="Connect / Reconnect"
+                            Width="20" Height="20"
+                            Margin="6,0,0,0"
+                            FontSize="12"
+                            Background="Transparent" BorderThickness="0"
+                            Foreground="#9CA3AF" Cursor="Hand"
+                            Click="ReconnectButton_Click"
+                            AutomationProperties.Name="Reconnect button"
+                            Visibility="Collapsed"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ═══ SESSION HISTORY BAR ══════════════════════════════════════════════ -->
+        <Border Grid.Row="1" Background="#252526" Padding="8,4"
+                BorderThickness="0,0,0,1" BorderBrush="#3C3C3C">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <ComboBox x:Name="SessionComboBox"
+                          Grid.Column="0"
+                          ToolTip="Active session — select to switch"
+                          SelectionChanged="SessionComboBox_SelectionChanged"
+                          Background="#2D2D2D" Foreground="#CCCCCC"
+                          BorderBrush="#555" BorderThickness="1"
+                          MinHeight="22" FontSize="11"
+                          AutomationProperties.Name="Session selector"/>
+
+                <Button x:Name="NewSessionButton"
+                        Grid.Column="1"
+                        Content="＋ New"
+                        ToolTip="Create a new session"
+                        Width="54" Height="22" Margin="4,0,0,0"
+                        FontSize="11"
+                        Background="#0E639C" Foreground="White"
+                        BorderThickness="0" Cursor="Hand"
+                        Click="NewSessionButton_Click"
+                        AutomationProperties.Name="New session button"/>
+
+                <Button x:Name="DeleteSessionButton"
+                        Grid.Column="2"
+                        Content="🗑" ToolTip="Delete selected session"
+                        Width="22" Height="22" Margin="4,0,0,0"
+                        FontSize="11"
+                        Background="#3C3C3C" Foreground="#CC4444"
+                        BorderThickness="0" Cursor="Hand"
+                        Click="DeleteSessionButton_Click"
+                        AutomationProperties.Name="Delete session button"/>
+            </Grid>
+        </Border>
+
+        <!-- ═══ MAIN BODY ═════════════════════════════════════════════════════════ -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto"
+                      x:Name="MainScrollViewer">
+            <StackPanel x:Name="MainPanel" Margin="10,8" Orientation="Vertical">
+
+                <!-- Active file context -->
+                <StackPanel Margin="0,0,0,8">
+                    <TextBlock Text="Context" FontSize="11" FontWeight="SemiBold"
+                               Foreground="#9CA3AF" Margin="0,0,0,2"/>
+                    <Border Background="#2D2D2D" BorderBrush="#3C3C3C"
+                            BorderThickness="1" CornerRadius="3" Padding="6,4">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock x:Name="ActiveFilePathText"
+                                       Grid.Row="0"
+                                       Text="(no active file)"
+                                       Foreground="#AAAAAA" FontSize="11"
+                                       TextTrimming="CharacterEllipsis"
+                                       ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                            <TextBox x:Name="SelectedTextArea"
+                                     Grid.Row="1"
+                                     Margin="0,4,0,0"
+                                     MaxHeight="60" TextWrapping="Wrap"
+                                     IsReadOnly="True"
+                                     VerticalScrollBarVisibility="Auto"
+                                     Background="#1E1E1E" Foreground="#AAAAAA"
+                                     BorderThickness="0" FontSize="11"
+                                     FontFamily="Consolas"
+                                     Visibility="Collapsed"/>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <!-- Prompt -->
+                <StackPanel Margin="0,0,0,8">
+                    <TextBlock Text="Prompt" FontSize="11" FontWeight="SemiBold"
+                               Foreground="#9CA3AF" Margin="0,0,0,2"/>
+                    <TextBox x:Name="PromptTextBox"
+                             MinHeight="60" MaxHeight="160"
+                             TextWrapping="Wrap" AcceptsReturn="True"
+                             VerticalScrollBarVisibility="Auto"
+                             Background="#2D2D2D" Foreground="#EEEEEE"
+                             BorderBrush="#555" BorderThickness="1"
+                             Padding="6,4" FontSize="12"
+                             AutomationProperties.Name="Prompt input"/>
+                </StackPanel>
+
+                <!-- Response area -->
+                <StackPanel Margin="0,0,0,8">
+                    <TextBlock Text="Response" FontSize="11" FontWeight="SemiBold"
+                               Foreground="#9CA3AF" Margin="0,0,0,2"/>
+                    <TextBox x:Name="ResponseTextBox"
+                             MinHeight="80" MaxHeight="300"
+                             TextWrapping="Wrap" IsReadOnly="True"
+                             VerticalScrollBarVisibility="Auto"
+                             Background="#2D2D2D" Foreground="#EEEEEE"
+                             BorderBrush="#555" BorderThickness="1"
+                             Padding="6,4" FontSize="12"
+                             AutomationProperties.Name="Response output"/>
+                </StackPanel>
+
+                <!-- Tool execution cards container -->
+                <StackPanel x:Name="ToolCardsPanel" Margin="0,0,0,8"
+                            Visibility="Collapsed">
+                    <TextBlock Text="Tool Calls" FontSize="11" FontWeight="SemiBold"
+                               Foreground="#9CA3AF" Margin="0,0,0,4"/>
+                    <ItemsControl x:Name="ToolCardsList"
+                                  AutomationProperties.Name="Tool calls list">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,0,4" Padding="8,6"
+                                        BorderBrush="#3C3C3C" BorderThickness="1"
+                                        CornerRadius="4" Background="#252526">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <!-- Status dot -->
+                                        <Ellipse Grid.Column="0" Width="8" Height="8"
+                                                 Fill="{Binding StatusBrush}"
+                                                 VerticalAlignment="Top" Margin="0,3,8,0"/>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding Title}"
+                                                       Foreground="#EEEEEE" FontSize="11"
+                                                       FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding StatusText}"
+                                                       Foreground="#9CA3AF" FontSize="10"
+                                                       Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- Suggested code -->
+                <Expander x:Name="SuggestedCodeExpander"
+                          Header="Suggested Code" IsExpanded="False"
+                          Margin="0,0,0,6"
+                          Foreground="#CCCCCC"
+                          AutomationProperties.Name="Suggested code expander">
+                    <TextBox x:Name="SuggestedCodeText"
+                             MinHeight="80" MaxHeight="300"
+                             TextWrapping="Wrap" IsReadOnly="True"
+                             VerticalScrollBarVisibility="Auto"
+                             FontFamily="Consolas" FontSize="11"
+                             Background="#1E1E1E" Foreground="#D4D4D4"
+                             BorderBrush="#555" BorderThickness="1"
+                             Padding="6,4"/>
+                </Expander>
+
+                <!-- Diff viewer -->
+                <Expander x:Name="DiffExpander"
+                          Header="Changed Files" IsExpanded="False"
+                          Margin="0,0,0,6"
+                          Foreground="#CCCCCC"
+                          AutomationProperties.Name="Diff viewer expander">
+                    <StackPanel>
+                        <!-- Per-file diff cards -->
+                        <ItemsControl x:Name="DiffFilesList"
+                                      AutomationProperties.Name="File diff list">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Expander Margin="0,2,0,0"
+                                              IsExpanded="False"
+                                              Foreground="#CCCCCC">
+                                        <Expander.Header>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding StatusIcon}"
+                                                           Foreground="{Binding StatusColour}"
+                                                           FontSize="11" Margin="0,0,6,0"/>
+                                                <TextBlock Text="{Binding FilePath}"
+                                                           Foreground="#CCCCCC" FontSize="11"/>
+                                                <TextBlock Text="{Binding AdditionsSummary}"
+                                                           Foreground="#22C55E" FontSize="10"
+                                                           Margin="8,0,0,0"/>
+                                                <TextBlock Text="{Binding DeletionsSummary}"
+                                                           Foreground="#EF4444" FontSize="10"
+                                                           Margin="4,0,0,0"/>
+                                            </StackPanel>
+                                        </Expander.Header>
+                                        <Border Background="#1A1A1A" Padding="6,4">
+                                            <TextBox Text="{Binding DiffText}"
+                                                     IsReadOnly="True"
+                                                     TextWrapping="Wrap"
+                                                     VerticalScrollBarVisibility="Auto"
+                                                     FontFamily="Consolas" FontSize="10"
+                                                     Background="Transparent"
+                                                     Foreground="#D4D4D4"
+                                                     BorderThickness="0"
+                                                     MaxHeight="200"/>
+                                        </Border>
+                                    </Expander>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Apply all -->
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <Button x:Name="ApplyAllDiffsButton"
+                                    Content="Apply All Changes"
+                                    Width="140" Height="26"
+                                    IsEnabled="False"
+                                    Background="#0E639C" Foreground="White"
+                                    BorderThickness="0" FontSize="11" Cursor="Hand"
+                                    Click="ApplyAllDiffsButton_Click"
+                                    AutomationProperties.Name="Apply all changes button"/>
+                            <Button x:Name="RevertChangesButton"
+                                    Content="Revert"
+                                    Width="70" Height="26" Margin="6,0,0,0"
+                                    IsEnabled="False"
+                                    Background="#3C3C3C" Foreground="#CCCCCC"
+                                    BorderThickness="0" FontSize="11" Cursor="Hand"
+                                    Click="RevertChangesButton_Click"
+                                    AutomationProperties.Name="Revert changes button"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Expander>
+
+                <!-- Settings summary strip -->
+                <Border Background="#1E1E1E" BorderBrush="#3C3C3C"
+                        BorderThickness="1" CornerRadius="3"
+                        Padding="8,4" Margin="0,4,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Credential:" Foreground="#6B7280" FontSize="10" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="ApiKeyText" Foreground="#9CA3AF" FontSize="10" Margin="4,0,12,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Backend:" Foreground="#6B7280" FontSize="10" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="BackendUrlText" Foreground="#9CA3AF" FontSize="10" Margin="4,0,12,0" VerticalAlignment="Center"/>
+                        <CheckBox x:Name="MockModeToggle" Content="Mock" Foreground="#9CA3AF" FontSize="10"
+                                  AutomationProperties.Name="Mock mode toggle"
+                                  Checked="MockModeToggle_Changed" Unchecked="MockModeToggle_Changed"/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ═══ ACTION BAR ════════════════════════════════════════════════════════ -->
+        <Border Grid.Row="3" Background="#252526"
+                BorderThickness="0,1,0,0" BorderBrush="#3C3C3C"
+                Padding="10,6">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Status text (streaming indicator) -->
+                <TextBlock x:Name="StatusText"
+                           Grid.Column="0"
+                           Text="" FontSize="11"
+                           Foreground="#9CA3AF"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"/>
+
+                <Button x:Name="AbortButton"
+                        Grid.Column="1"
+                        Content="Stop"
+                        Width="54" Height="26"
+                        Margin="4,0,6,0"
+                        IsEnabled="False"
+                        Background="#7F1D1D" Foreground="#FCA5A5"
+                        BorderThickness="0" FontSize="11" Cursor="Hand"
+                        Click="AbortButton_Click"
+                        AutomationProperties.Name="Abort button"
+                        Visibility="Collapsed"/>
+
+                <Button x:Name="ClearButton"
+                        Grid.Column="1"
+                        Content="Clear"
+                        Width="54" Height="26"
+                        Margin="0,0,6,0"
+                        Background="#3C3C3C" Foreground="#CCCCCC"
+                        BorderThickness="0" FontSize="11" Cursor="Hand"
+                        Click="ClearButton_Click"
+                        AutomationProperties.Name="Clear button"/>
+
+                <Button x:Name="AskButton"
+                        Grid.Column="2"
+                        Content="Ask Kilo ▶"
+                        Width="90" Height="26"
+                        Background="#0E639C" Foreground="White"
+                        BorderThickness="0" FontSize="11" FontWeight="SemiBold"
+                        Cursor="Hand"
+                        Click="AskButton_Click"
+                        AutomationProperties.Name="Ask Kilo button"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

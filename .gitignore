@@ -1,0 +1,24 @@
+bin/
+obj/
+.vscode/
+*.user
+*.suo
+*.slnx.user
+*.vs/
+*.db
+*.log
+.idea/
+node_modules/
+*.DS_Store
+*.tmp
+*.cache
+*.pdb
+*.dll
+*.exe
+publish/
+.nuget/packages/
+
+# extend with VS SDK specifics
+*.vsix
+*.pkgdef
+*.nupkg

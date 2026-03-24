@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Vsix xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" Version="1.0.0">
+  <Identifier>
+    <Name>Kilo Visual Studio Assistant</Name>
+    <Author>Kilo Team</Author>
+    <Version>0.1.0</Version>
+    <Description>VS2022 plugin for Kilo assistant functionality.</Description>
+    <Locale>1033</Locale>
+    <MoreInfo>https://example.com/kilo-vs</MoreInfo>
+    <Icon>Resources\kilo-icon.png</Icon>
+  </Identifier>
+  <References>
+    <Reference Id="Microsoft.VisualStudio.MPF" />
+  </References>
+  <Assets>
+    <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" Path="|\$(TargetFileName)" />
+  </Assets>
+</Vsix>
