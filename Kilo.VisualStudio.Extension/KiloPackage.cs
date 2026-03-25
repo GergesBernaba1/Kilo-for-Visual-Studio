@@ -21,6 +21,7 @@ using Task = System.Threading.Tasks.Task;
 namespace Kilo.VisualStudio.Extension
 {
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
+    [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideToolWindow(typeof(KiloAssistantToolWindowPane))]
     [ProvideToolWindow(typeof(KiloDiffViewerWindowPane))]
     [ProvideToolWindow(typeof(KiloSessionHistoryWindowPane))]

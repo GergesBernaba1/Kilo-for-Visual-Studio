@@ -29,7 +29,9 @@
     <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.2.32505.173" />
     <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.14.2120" PrivateAssets="all" />
     <Reference Include="System.Design" />
-    <None Include="KiloCommands.vsct" />
+    <VSCTCompile Include="KiloCommands.vsct">
+      <ResourceName>Menus.ctmenu</ResourceName>
+    </VSCTCompile>
     <None Include="source.extension.vsixmanifest" />
   </ItemGroup>
 

@@ -1,4 +1,4 @@
-# Kilo for Visual Studio 2022 — Initiation Document
+﻿# Kilo for Visual Studio 2022 — Initiation Document
 
 ## 1. Purpose
 
@@ -371,11 +371,16 @@ This project will initiate a **Visual Studio 2022 extension inspired by Kilo Cod
 - [x] Clarification resolved (API key backend model, `FR-011` added)
 - [x] Analysis completed (`/speckit.analyze` cross-check)
 - [x] MVP implementation readiness confirmed
+- [x] Solution and core projects implemented (`Extension`, `App`, `Integration`, `Contracts`, `Tests`, `Vsix`)
+- [x] VSIX packaging flow implemented and validated
+- [x] Extension command/menu and tool-window flow implemented
 
 ## Remaining Next Steps
 
-1. Create Visual Studio extension solution and projects.
-2. Implement tasks T001..T021 (and T022 for FR-011) in code.
-3. Run unit/integration tests and validate per success criteria.
+1. Harden release quality: signing, metadata, marketplace readiness.
+2. Expand integration/UI automation test coverage and reliability checks.
+3. Close prioritized product gaps from `gaps.md` before broad rollout.
 
 This scope protects implementation quality, reduces risk, and keeps the product direction aligned with real Visual Studio capabilities.
+
+

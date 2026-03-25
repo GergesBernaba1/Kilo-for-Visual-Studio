@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="Kilo.VisualStudio.Assistant" Version="1.0.2" Language="en-US" Publisher="Gerges Bernaba" />
+    <Identity Id="Kilo.VisualStudio.Assistant" Version="1.0.5" Language="en-US" Publisher="Gerges Bernaba" />
     <DisplayName>Kilo Visual Studio Assistant</DisplayName>
     <Description xml:space="preserve">Created by Gerges Bernaba. Kilo Visual Studio Assistant is an AI-powered extension for Visual Studio 2022 that helps with intelligent code completion, chat-based coding assistance, and automated development workflows.</Description>
     <MoreInfo>http://kilo.ai/visualstudio</MoreInfo>

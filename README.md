@@ -18,6 +18,25 @@ A Visual Studio 2022 extension implementation of Kilo-style AI coding assistance
 2. Restore packages: `dotnet restore`.
 3. Build and run tests: `dotnet test Kilo.VisualStudio.Tests/Kilo.VisualStudio.Tests.csproj`.
 
+## Install extension (VSIX)
+
+1. Build package:
+   - `msbuild Kilo.VisualStudio.Vsix\Kilo.VisualStudio.Vsix.csproj /t:CreateVsixContainer /p:Configuration=Release /p:DeployExtension=false`
+2. Install:
+   - `Kilo.VisualStudio.Vsix\Kilo.VisualStudio.vsix`
+3. If installer reports blocking processes, close all Visual Studio instances and install again.
+
+## Open the UI in Visual Studio
+
+Use one of these:
+- `Tools` -> `Kilo Assistant` -> `Open Kilo Assistant`
+- Shortcut: `Ctrl+Shift+K`
+
+If you do not see the menu:
+- Confirm extension is enabled in `Extensions -> Manage Extensions`.
+- Restart Visual Studio once after install/update.
+- Reinstall the latest VSIX from `Kilo.VisualStudio.Vsix\Kilo.VisualStudio.vsix`.
+
 ## Implemented features
 
 ### Core functionality
@@ -66,7 +85,7 @@ A Visual Studio 2022 extension implementation of Kilo-style AI coding assistance
 ## How to release
 
 1. Confirm tests: `dotnet test`.
-2. Build `Kilo.VisualStudio.Extension` VSIX package.
+2. Build `Kilo.VisualStudio.Vsix` package.
 3. Install and verify `Kilo Assistant` command functions in VS2022.
 
 ## Documentation
