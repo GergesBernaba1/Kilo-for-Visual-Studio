@@ -1,24 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Vsix xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011" Version="1.0.0">
-  <Identifier>
-    <Name>Kilo Visual Studio Assistant</Name>
-    <Author>Kilo Team</Author>
-    <Version>1.0.0</Version>
-    <Description>AI-powered coding assistant for Visual Studio 2022. Provides intelligent code completion, chat-based assistance, and automated development workflows.</Description>
-    <Locale>1033</Locale>
-    <MoreInfo>https://kilo.ai/visualstudio</MoreInfo>
-    <Icon>Resources\kilo-icon.png</Icon>
-    <PreviewImage>Resources\kilo-preview.png</PreviewImage>
-    <Tags>AI, Coding, Assistant, Development</Tags>
-  </Identifier>
-  <References>
-    <Reference Id="Microsoft.VisualStudio.MPF" />
-  </References>
-  <Dependencies>
-    <Dependency Id="Microsoft.VisualStudio.Component.VC.Tools.x86.x64" DisplayName="Visual C++ compilers and libraries" />
-  </Dependencies>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+  <Metadata>
+    <Identity Id="Kilo.VisualStudio.Assistant" Version="1.0.2" Language="en-US" Publisher="Gerges Bernaba" />
+    <DisplayName>Kilo Visual Studio Assistant</DisplayName>
+    <Description xml:space="preserve">Created by Gerges Bernaba. Kilo Visual Studio Assistant is an AI-powered extension for Visual Studio 2022 that helps with intelligent code completion, chat-based coding assistance, and automated development workflows.</Description>
+    <MoreInfo>http://kilo.ai/visualstudio</MoreInfo>
+    <Icon>KiloLogo.png</Icon>
+    <Tags>AI;Coding;Assistant;Development</Tags>
+  </Metadata>
+  <Installation InstalledByMsi="false" AllUsers="false" SystemComponent="false" Scope="ProductExtension">
+    <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0,18.0)">
+      <ProductArchitecture>amd64</ProductArchitecture>
+    </InstallationTarget>
+    <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[17.0,18.0)">
+      <ProductArchitecture>amd64</ProductArchitecture>
+    </InstallationTarget>
+    <InstallationTarget Id="Microsoft.VisualStudio.Enterprise" Version="[17.0,18.0)">
+      <ProductArchitecture>amd64</ProductArchitecture>
+    </InstallationTarget>
+  </Installation>
+  <Dependencies />
+  <Prerequisites>
+    <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[17.0,18.0)" DisplayName="Visual Studio core editor" />
+  </Prerequisites>
   <Assets>
-    <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" Path="$(TargetFileName)" />
-    <Asset Type="Microsoft.VisualStudio.ToolWindow" d:Source="Project" Path="UI\KiloAssistantToolWindowControl.xaml" />
+    <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="File" Path="Kilo.VisualStudio.Extension.pkgdef" />
   </Assets>
-</Vsix>
+</PackageManifest>
