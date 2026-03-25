@@ -5,7 +5,7 @@
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
-    <NoWarn>$(NoWarn);VSTHRD010;VSTHRD100;VSTHRD110;VSTHRD001;CS8618;CS8604;CS8603</NoWarn>
+    <NoWarn>$(NoWarn);VSTHRD010;VSTHRD100;VSTHRD110;VSTHRD001;VSTHRD200;CS8618;CS8604;CS8603</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

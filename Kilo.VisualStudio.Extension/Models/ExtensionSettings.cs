@@ -1,12 +1,20 @@
 using System;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text.Json;
+using Kilo.VisualStudio.Extension.Services;
 
 namespace Kilo.VisualStudio.Extension.Models
 {
     public class ExtensionSettings
     {
-        public string KiloApiKey { get; set; } = string.Empty;
+        private static VsSecureStorageAdapter? _secureStorage;
+
+        public string KiloApiKey 
+        { 
+            get => GetSecureApiKey();
+            set => SetSecureApiKey(value);
+        }
         public string BackendPassword { get; set; } = string.Empty;
         public bool UseMockBackend { get; set; } = true;
         public string BackendUrl { get; set; } = "http://127.0.0.1:4096";
@@ -78,6 +86,45 @@ namespace Kilo.VisualStudio.Extension.Models
             catch
             {
                 // ignore failures for MVP
+            }
+        }
+
+        // ── Secure Storage Helpers ─────────────────────────────────────────────────────
+
+        private static VsSecureStorageAdapter GetSecureStorage()
+        {
+            _secureStorage ??= new VsSecureStorageAdapter();
+            return _secureStorage;
+        }
+
+        private string GetSecureApiKey()
+        {
+            try
+            {
+                return GetSecureStorage().RetrieveSecret("ApiKey") ?? string.Empty;
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
+        private void SetSecureApiKey(string value)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    GetSecureStorage().DeleteSecret("ApiKey");
+                }
+                else
+                {
+                    GetSecureStorage().StoreSecret("ApiKey", value);
+                }
+            }
+            catch
+            {
+                // Ignore storage failures
             }
         }
     }

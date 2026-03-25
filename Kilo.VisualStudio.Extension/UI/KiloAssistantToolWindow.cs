@@ -19,6 +19,7 @@ namespace Kilo.VisualStudio.Extension.UI
             var request = new AssistantRequest
             {
                 ActiveFilePath = activeFilePath,
+                ActiveFileContent = KiloPackage.GetActiveFileContent(),
                 LanguageId = languageId,
                 SelectedText = selectedText,
                 Prompt = prompt,

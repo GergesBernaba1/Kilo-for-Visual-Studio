@@ -121,7 +121,10 @@ namespace Kilo.VisualStudio.Integration
                 // For mock, return empty or default for autocomplete
                 if (typeof(TResponse) == typeof(AutocompleteResponse))
                 {
-                    return (TResponse)(object)new AutocompleteResponse { Completions = new List<CompletionItem>() };
+                    // Generate mock AI completions based on the request
+                    var autoRequest = request as AutocompleteRequest;
+                    var completions = GenerateMockCompletions(autoRequest?.Prefix ?? "", autoRequest?.LanguageId ?? "csharp");
+                    return (TResponse)(object)new AutocompleteResponse { Completions = completions };
                 }
                 throw new NotImplementedException("Mock not implemented for this endpoint");
             }
@@ -251,6 +254,79 @@ namespace Kilo.VisualStudio.Integration
             }
 
             return $"--- a/original\n+++ b/refactored\n@@ -1,5 +1,7 @@\n-{original}\n+{newCode}";
+        }
+
+        private static List<CompletionItem> GenerateMockCompletions(string prefix, string languageId)
+        {
+            var completions = new List<CompletionItem>();
+            if (string.IsNullOrWhiteSpace(prefix)) return completions;
+
+            // Generate contextual completions based on prefix and language
+            var lang = languageId?.ToLowerInvariant() ?? "csharp";
+
+            // Common C# completions
+            if (lang == "csharp" || lang == "cs")
+            {
+                if (prefix.StartsWith("pub", StringComparison.OrdinalIgnoreCase))
+                {
+                    completions.Add(new CompletionItem { Label = "public", InsertText = "public ", Kind = CompletionKind.Keyword });
+                    completions.Add(new CompletionItem { Label = "public async Task", InsertText = "public async Task<>\n{\n    \n}", Kind = CompletionKind.Method });
+                    completions.Add(new CompletionItem { Label = "public class", InsertText = "public class \n{\n    \n}", Kind = CompletionKind.Class });
+                }
+                if (prefix.StartsWith("priv", StringComparison.OrdinalIgnoreCase))
+                {
+                    completions.Add(new CompletionItem { Label = "private", InsertText = "private ", Kind = CompletionKind.Keyword });
+                    completions.Add(new CompletionItem { Label = "private readonly", InsertText = "private readonly ", Kind = CompletionKind.Keyword });
+                }
+                if (prefix.StartsWith("async", StringComparison.OrdinalIgnoreCase))
+                {
+                    completions.Add(new CompletionItem { Label = "async Task", InsertText = "async Task\n{\n    \n}", Kind = CompletionKind.Method });
+                }
+                if (prefix.StartsWith("const", StringComparison.OrdinalIgnoreCase))
+                {
+                    completions.Add(new CompletionItem { Label = "const string", InsertText = "const string ", Kind = CompletionKind.Keyword });
+                    completions.Add(new CompletionItem { Label = "const int", InsertText = "const int ", Kind = CompletionKind.Keyword });
+                }
+            }
+
+            // Common JavaScript completions
+            if (lang == "javascript" || lang == "js")
+            {
+                if (prefix.StartsWith("fun", StringComparison.OrdinalIgnoreCase))
+                {
+                    completions.Add(new CompletionItem { Label = "function", InsertText = "function() {\n    \n}", Kind = CompletionKind.Function });
+                    completions.Add(new CompletionItem { Label = "async function", InsertText = "async function() {\n    \n}", Kind = CompletionKind.Function });
+                }
+                if (prefix.StartsWith("con", StringComparison.OrdinalIgnoreCase))
+                {
+                    completions.Add(new CompletionItem { Label = "const", InsertText = "const  = ", Kind = CompletionKind.Keyword });
+                    completions.Add(new CompletionItem { Label = "console.log", InsertText = "console.log()", Kind = CompletionKind.Function });
+                }
+                if (prefix.StartsWith("req", StringComparison.OrdinalIgnoreCase))
+                {
+                    completions.Add(new CompletionItem { Label = "require", InsertText = "require('')", Kind = CompletionKind.Function });
+                }
+            }
+
+            // Common Python completions
+            if (lang == "python" || lang == "py")
+            {
+                if (prefix.StartsWith("def", StringComparison.OrdinalIgnoreCase))
+                {
+                    completions.Add(new CompletionItem { Label = "def", InsertText = "def ():\n    \n", Kind = CompletionKind.Function });
+                    completions.Add(new CompletionItem { Label = "def __init__", InsertText = "def __init__(self):\n    \n", Kind = CompletionKind.Function });
+                }
+                if (prefix.StartsWith("cla", StringComparison.OrdinalIgnoreCase))
+                {
+                    completions.Add(new CompletionItem { Label = "class", InsertText = "class :\n    def __init__(self):\n        \n", Kind = CompletionKind.Class });
+                }
+                if (prefix.StartsWith("imp", StringComparison.OrdinalIgnoreCase))
+                {
+                    completions.Add(new CompletionItem { Label = "import", InsertText = "import ", Kind = CompletionKind.Keyword });
+                }
+            }
+
+            return completions;
         }
     }
 }

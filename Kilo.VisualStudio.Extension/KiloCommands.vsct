@@ -113,6 +113,30 @@
         <KeyBinding guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x010A" key1="U" mod1="Control Shift" />
       </KeyBindings>
     </Button>
+    
+    <!-- Open Agent Manager -->
+    <Button guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x010B" priority="0x010B" type="Button">
+      <Parent guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0200" />
+      <Strings>
+        <ButtonText>Agent Manager</ButtonText>
+        <LocCanonicalName>Kilo.OpenAgentManager</LocCanonicalName>
+      </Strings>
+      <KeyBindings>
+        <KeyBinding guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x010B" key1="A" mod1="Control Shift" />
+      </KeyBindings>
+    </Button>
+    
+    <!-- Open Sub-Agent Viewer -->
+    <Button guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x010C" priority="0x010C" type="Button">
+      <Parent guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0200" />
+      <Strings>
+        <ButtonText>Sub-Agent Viewer</ButtonText>
+        <LocCanonicalName>Kilo.OpenSubAgentViewer</LocCanonicalName>
+      </Strings>
+      <KeyBindings>
+        <KeyBinding guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x010C" key1="S" mod1="Control Shift" />
+      </KeyBindings>
+    </Button>
   </Commands>
 
   <Bitmaps>
@@ -140,6 +164,8 @@
       <IDSymbol name="cmdidCycleAgentMode" value="0x0107" />
       <IDSymbol name="cmdidNewSession" value="0x0109" />
       <IDSymbol name="cmdidOpenAutomationToolWindow" value="0x010A" />
+      <IDSymbol name="cmdidOpenAgentManager" value="0x010B" />
+      <IDSymbol name="cmdidOpenSubAgentViewer" value="0x010C" />
       <IDSymbol name="idsKiloAssistantGroup" value="0x0200" />
       <IDSymbol name="bmpKilo16" value="0x0101" />
     </GuidSymbol>

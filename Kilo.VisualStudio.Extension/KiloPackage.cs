@@ -26,6 +26,8 @@ namespace Kilo.VisualStudio.Extension
     [ProvideToolWindow(typeof(KiloSessionHistoryWindowPane))]
     [ProvideToolWindow(typeof(KiloSettingsWindowPane))]
     [ProvideToolWindow(typeof(KiloAutomationToolWindowPane))]
+    [ProvideToolWindow(typeof(KiloAgentManagerWindowPane))]
+    [ProvideToolWindow(typeof(KiloSubAgentViewerWindowPane))]
     [Guid(PackageGuids.PackageGuidString)]
     public sealed class KiloPackage : AsyncPackage
     {
@@ -55,6 +57,29 @@ namespace Kilo.VisualStudio.Extension
         public static AutocompleteService? AutocompleteServiceInstance => _autocompleteServiceInstance;
         public static AutomationService? AutomationServiceInstance => _automationServiceInstance;
         public static AgentModeService? AgentModeServiceInstance => _agentModeServiceInstance;
+
+        /// <summary>
+        /// Gets the full content of the active document file from any context.
+        /// </summary>
+        public static string GetActiveFileContent()
+        {
+            return Instance?.GetActiveFileContentInternal() ?? string.Empty;
+        }
+
+        private string GetActiveFileContentInternal()
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+            try
+            {
+                var filePath = GetActiveFilePath();
+                if (!string.IsNullOrEmpty(filePath) && System.IO.File.Exists(filePath))
+                {
+                    return System.IO.File.ReadAllText(filePath);
+                }
+            }
+            catch { }
+            return string.Empty;
+        }
 
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
@@ -150,7 +175,7 @@ namespace Kilo.VisualStudio.Extension
                         }, TaskScheduler.Default);
             }
 
-            await RegisterCommandsAsync();
+            await RegisterCommands();
             _logger.Info("Kilo Extension initialized.");
         }
 
@@ -318,7 +343,7 @@ namespace Kilo.VisualStudio.Extension
 
         // ── Commands ────────────────────────────────────────────────────────────────
 
-        private async Task RegisterCommandsAsync()
+        private async Task RegisterCommands()
         {
             await this.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -327,44 +352,52 @@ namespace Kilo.VisualStudio.Extension
                 var packageGuid = new Guid(PackageGuids.PackageGuidString);
 
                 commandService.AddCommand(new MenuCommand(
-                    (s, e) => _ = OpenToolWindowAsync(),
+                    (s, e) => _ = OpenToolWindow(),
                     new CommandID(packageGuid, PackageCommandSet.OpenAssistantToolWindow)));
 
                 commandService.AddCommand(new MenuCommand(
-                    (s, e) => _ = AskSelectionAsync(),
+                    (s, e) => _ = AskSelection(),
                     new CommandID(packageGuid, PackageCommandSet.AskSelection)));
 
                 commandService.AddCommand(new MenuCommand(
-                    (s, e) => _ = AskFileAsync(),
+                    (s, e) => _ = AskFile(),
                     new CommandID(packageGuid, PackageCommandSet.AskFile)));
 
                 commandService.AddCommand(new MenuCommand(
-                    (s, e) => _ = OpenDiffViewerWindowAsync(),
+                    (s, e) => _ = OpenDiffViewerWindow(),
                     new CommandID(packageGuid, PackageCommandSet.OpenDiffViewer)));
 
                 commandService.AddCommand(new MenuCommand(
-                    (s, e) => _ = OpenSessionHistoryWindowAsync(),
+                    (s, e) => _ = OpenSessionHistoryWindow(),
                     new CommandID(packageGuid, PackageCommandSet.OpenSessionHistory)));
 
                 commandService.AddCommand(new MenuCommand(
-                    (s, e) => _ = OpenSettingsWindowAsync(),
+                    (s, e) => _ = OpenSettingsWindow(),
                     new CommandID(packageGuid, PackageCommandSet.OpenSettings)));
 
                 commandService.AddCommand(new MenuCommand(
-                    (s, e) => _ = CycleAgentModeAsync(),
+                    (s, e) => _ = CycleAgentMode(),
                     new CommandID(packageGuid, PackageCommandSet.CycleAgentMode)));
 
                 commandService.AddCommand(new MenuCommand(
-                    (s, e) => _ = NewSessionAsync(),
+                    (s, e) => _ = NewSession(),
                     new CommandID(packageGuid, PackageCommandSet.NewSession)));
 
                 commandService.AddCommand(new MenuCommand(
-                    (s, e) => _ = OpenAutomationWindowAsync(),
+                    (s, e) => _ = OpenAutomationWindow(),
                     new CommandID(packageGuid, PackageCommandSet.OpenAutomationToolWindow)));
+
+                commandService.AddCommand(new MenuCommand(
+                    (s, e) => _ = ShowAgentManagerWindow(),
+                    new CommandID(packageGuid, PackageCommandSet.OpenAgentManager)));
+
+                commandService.AddCommand(new MenuCommand(
+                    (s, e) => _ = ShowSubAgentViewer(),
+                    new CommandID(packageGuid, PackageCommandSet.OpenSubAgentViewer)));
             }
         }
 
-        private async Task OpenToolWindowAsync()
+        private async Task OpenToolWindow()
         {
             await this.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -400,9 +433,9 @@ namespace Kilo.VisualStudio.Extension
             }
         }
 
-        private async Task AskSelectionAsync()
+        private async Task AskSelection()
         {
-            await OpenToolWindowAsync();
+            await OpenToolWindow();
 
             var window = FindToolWindow(typeof(KiloAssistantToolWindowPane), 0, false);
             if (window?.Content is UI.KiloAssistantToolWindowControl control)
@@ -416,9 +449,9 @@ namespace Kilo.VisualStudio.Extension
             }
         }
 
-        private async Task AskFileAsync()
+        private async Task AskFile()
         {
-            await OpenToolWindowAsync();
+            await OpenToolWindow();
 
             var window = FindToolWindow(typeof(KiloAssistantToolWindowPane), 0, false);
             if (window?.Content is UI.KiloAssistantToolWindowControl control)
@@ -429,7 +462,7 @@ namespace Kilo.VisualStudio.Extension
             }
         }
 
-        private async Task OpenDiffViewerWindowAsync()
+        private async Task OpenDiffViewerWindow()
         {
             await this.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -441,7 +474,7 @@ namespace Kilo.VisualStudio.Extension
             Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(frame.Show());
         }
 
-        private async Task OpenSessionHistoryWindowAsync()
+        private async Task OpenSessionHistoryWindow()
         {
             await this.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -453,7 +486,7 @@ namespace Kilo.VisualStudio.Extension
             Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(frame.Show());
         }
 
-        private async Task OpenSettingsWindowAsync()
+        private async Task OpenSettingsWindow()
         {
             await this.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -465,7 +498,7 @@ namespace Kilo.VisualStudio.Extension
             Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(frame.Show());
         }
 
-        private async Task OpenAutomationWindowAsync()
+        private async Task OpenAutomationWindow()
         {
             await this.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -477,9 +510,33 @@ namespace Kilo.VisualStudio.Extension
             Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(frame.Show());
         }
 
-        private async Task CycleAgentModeAsync()
+        private async Task ShowAgentManagerWindow()
         {
-            await OpenToolWindowAsync();
+            await this.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            var window = FindToolWindow(typeof(KiloAgentManagerWindowPane), 0, true);
+            if (window?.Frame == null)
+                throw new NotSupportedException("Cannot create Kilo Agent Manager window.");
+
+            var frame = (IVsWindowFrame)window.Frame;
+            Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(frame.Show());
+        }
+
+        private async Task ShowSubAgentViewer()
+        {
+            await this.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            var window = FindToolWindow(typeof(KiloSubAgentViewerWindowPane), 0, true);
+            if (window?.Frame == null)
+                throw new NotSupportedException("Cannot create Kilo Sub-Agent Viewer window.");
+
+            var frame = (IVsWindowFrame)window.Frame;
+            Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(frame.Show());
+        }
+
+        private async Task CycleAgentMode()
+        {
+            await OpenToolWindow();
 
             var window = FindToolWindow(typeof(KiloAssistantToolWindowPane), 0, false);
             if (window?.Content is UI.KiloAssistantToolWindowControl control)
@@ -488,9 +545,9 @@ namespace Kilo.VisualStudio.Extension
             }
         }
 
-        private async Task NewSessionAsync()
+        private async Task NewSession()
         {
-            await OpenToolWindowAsync();
+            await OpenToolWindow();
 
             var window = FindToolWindow(typeof(KiloAssistantToolWindowPane), 0, false);
             if (window?.Content is UI.KiloAssistantToolWindowControl control)
@@ -549,6 +606,24 @@ namespace Kilo.VisualStudio.Extension
                         frame.GetProperty((int)__VSFPROPID.VSFPROPID_pszMkDocument, out var value);
                         return value as string ?? string.Empty;
                     }
+                }
+            }
+            catch { }
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Gets the full content of the active document file.
+        /// </summary>
+        public string GetActiveFileContentSync()
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+            try
+            {
+                var filePath = GetActiveFilePath();
+                if (!string.IsNullOrEmpty(filePath) && System.IO.File.Exists(filePath))
+                {
+                    return System.IO.File.ReadAllText(filePath);
                 }
             }
             catch { }

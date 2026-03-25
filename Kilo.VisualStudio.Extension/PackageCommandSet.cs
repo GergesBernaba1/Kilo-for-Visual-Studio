@@ -13,6 +13,8 @@ namespace Kilo.VisualStudio.Extension
         public const int ClearChat = 0x0108;
         public const int NewSession = 0x0109;
         public const int OpenAutomationToolWindow = 0x010A;
+        public const int OpenAgentManager = 0x010B;
+        public const int OpenSubAgentViewer = 0x010C;
         public const int CommandSetGuid = 0x00000000;
     }
 }

@@ -1,0 +1,60 @@
+<UserControl x:Class="Kilo.VisualStudio.Extension.UI.KiloSubAgentViewerControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#1E1E1E">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Grid.Row="0" Margin="12,12,12,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Sub-Agent Viewer" FontSize="16" FontWeight="SemiBold" Foreground="#EEEEEE" VerticalAlignment="Center"/>
+            <Button x:Name="RefreshButton" Grid.Column="1" Content="↻" Width="28" Height="28"
+                    Background="#2D2D2D" Foreground="#CCCCCC" BorderThickness="0" Cursor="Hand"
+                    Click="RefreshButton_Click" ToolTip="Refresh agents"/>
+        </Grid>
+
+        <!-- Sub-Agent List -->
+        <ListBox x:Name="SubAgentListBox" Grid.Row="1" Margin="12,0,12,12"
+                 Background="#1E1E1E" Foreground="#CCCCCC" BorderThickness="0">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid Margin="0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Width="32" Height="32" CornerRadius="16" Background="#6F42C1" Margin="0,0,12,0">
+                            <TextBlock Text="🤖" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold" Foreground="#EEEEEE"/>
+                            <TextBlock Text="{Binding Task}" FontSize="11" Foreground="#9CA3AF" TextTrimming="CharacterEllipsis" MaxWidth="300"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Status}" FontSize="11" Foreground="#17A2B8" HorizontalAlignment="Right"/>
+                            <ProgressBar Value="{Binding Progress}" Maximum="100" Width="80" Height="4" Margin="0,4,0,0"
+                                         Background="#2D2D2D" Foreground="#28A745"/>
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <!-- Output Log -->
+        <Expander Grid.Row="2" Header="Output Log" IsExpanded="False" Margin="12,0,12,12"
+                  Foreground="#CCCCCC" Background="#1E1E1E">
+            <ListBox x:Name="OutputLogBox" Height="150"
+                     Background="#2D2D2D" Foreground="#CCCCCC" BorderThickness="0"
+                     FontFamily="Consolas" FontSize="11"/>
+        </Expander>
+    </Grid>
+</UserControl>
