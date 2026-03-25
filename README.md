@@ -82,6 +82,4 @@ A Visual Studio 2022 extension implementation of Kilo-style AI coding assistance
 - Email: gergesbernaba2@gmail.com
 - LinkedIn: https://www.linkedin.com/in/gergesbernaba/
 
-## Notes
 
-- This repo is fully aligned with the `Kilo Visual Studio 2022 initiation` plan and spec.
