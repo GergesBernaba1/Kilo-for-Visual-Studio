@@ -59,14 +59,7 @@ namespace Kilo.VisualStudio.Integration
             if (string.IsNullOrEmpty(provider)) provider = "openai";
             if (string.IsNullOrEmpty(model)) model = "default";
 
-            var endpoint = provider.ToLowerInvariant() switch
-            {
-                "openai" => $"{BackendUrl.TrimEnd('/')}/openai/{model}",
-                "anthropic" => $"{BackendUrl.TrimEnd('/')}/anthropic/{model}",
-                "google" => $"{BackendUrl.TrimEnd('/')}/google/{model}",
-                "local" or "ollama" => $"{BackendUrl.TrimEnd('/')}/local/{model}",
-                _ => $"{BackendUrl.TrimEnd('/')}/{provider.ToLowerInvariant()}/{model}"
-            };
+            var endpoint = BuildEndpoint(provider, model);
 
             string jsonBody = JsonSerializer.Serialize(request);
             using var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
@@ -90,6 +83,34 @@ namespace Kilo.VisualStudio.Integration
                 IsSuccess = false,
                 Error = "Failed to deserialize backend response",
                 Message = responseBody
+            };
+        }
+
+        public string BuildEndpoint(string provider, string model)
+        {
+            provider = (provider ?? string.Empty).Trim().ToLowerInvariant();
+            model = (model ?? string.Empty).Trim();
+
+            if (string.IsNullOrEmpty(provider) && model.Contains(":"))
+            {
+                var colonIndex = model.IndexOf(':');
+                if (colonIndex >= 0)
+                {
+                    provider = model.Substring(0, colonIndex).Trim().ToLowerInvariant();
+                    model = model.Substring(colonIndex + 1).Trim();
+                }
+            }
+
+            if (string.IsNullOrEmpty(provider)) provider = "openai";
+            if (string.IsNullOrEmpty(model)) model = "default";
+
+            return provider switch
+            {
+                "openai" => $"{BackendUrl.TrimEnd('/')}/openai/{model}",
+                "anthropic" => $"{BackendUrl.TrimEnd('/')}/anthropic/{model}",
+                "google" => $"{BackendUrl.TrimEnd('/')}/google/{model}",
+                "local" or "ollama" => $"{BackendUrl.TrimEnd('/')}/local/{model}",
+                _ => $"{BackendUrl.TrimEnd('/')}/{provider}/{model}"
             };
         }
 

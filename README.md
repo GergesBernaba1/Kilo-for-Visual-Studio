@@ -69,6 +69,19 @@ A Visual Studio 2022 extension implementation of Kilo-style AI coding assistance
 2. Build `Kilo.VisualStudio.Extension` VSIX package.
 3. Install and verify `Kilo Assistant` command functions in VS2022.
 
+## Documentation
+
+- [Roadmap](docs/roadmap.md)
+- [User Guide](docs/user-guide.md)
+- [Contributing](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+
+## Developer
+
+**Gerges Bernaba**
+- Email: gergesbernaba2@gmail.com
+- LinkedIn: https://www.linkedin.com/in/gergesbernaba/
+
 ## Notes
 
 - This repo is fully aligned with the `Kilo Visual Studio 2022 initiation` plan and spec.
