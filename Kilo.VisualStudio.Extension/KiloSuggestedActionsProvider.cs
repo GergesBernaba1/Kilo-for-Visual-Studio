@@ -61,7 +61,9 @@ namespace Kilo.VisualStudio.Extension
             var selectedText = selectedSpan.GetText();
             var displayText = selectedText.Length > 80 ? selectedText.Substring(0, 77) + "..." : selectedText;
             var action = new KiloSuggestedAction($"Kilo: Uppercase selection ({displayText})", selectedText);
+#pragma warning disable CS0618 // API is obsolete in newer SDKs; kept for compatibility with current VS SDK package.
             var set = new SuggestedActionSet(new[] { action }, SuggestedActionSetPriority.Medium, default, null);
+#pragma warning restore CS0618
             return new[] { set };
         }
 

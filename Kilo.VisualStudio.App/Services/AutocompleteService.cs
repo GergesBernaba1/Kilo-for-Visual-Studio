@@ -239,7 +239,7 @@ namespace Kilo.VisualStudio.App.Services
                 if (!File.Exists(filePath))
                     return context;
 
-                var allLines = await File.ReadAllLinesAsync(filePath);
+                var allLines = await Task.Run(() => File.ReadAllLines(filePath));
                 if (line < 0 || line >= allLines.Length)
                     return context;
 

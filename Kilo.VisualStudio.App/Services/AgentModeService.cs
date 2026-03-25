@@ -345,7 +345,7 @@ namespace Kilo.VisualStudio.App.Services
             }
         }
 
-        public void AutoSwitchModeBasedOnContext(string contextType, object contextData = null)
+        public void AutoSwitchModeBasedOnContext(string contextType, object? contextData = null)
         {
             switch (contextType.ToLowerInvariant())
             {
@@ -391,7 +391,7 @@ namespace Kilo.VisualStudio.App.Services
         {
             if (!string.IsNullOrEmpty(modeName))
             {
-                SetMode(modeName);
+                SetMode(modeName!);
             }
         }
 

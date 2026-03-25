@@ -114,7 +114,7 @@ async function launch() {
 launch().catch(e => { console.error(e); process.exit(1); });
 ";
 
-                await File.WriteAllTextAsync(launcherPath, launcherContent);
+                await Task.Run(() => File.WriteAllText(launcherPath, launcherContent));
 
                 // Note: In real implementation, this would spawn a Node.js process
                 // For now, we'll use the endpoint if available
@@ -191,7 +191,7 @@ launch().catch(e => { console.error(e); process.exit(1); });
                 if (response.IsSuccessStatusCode)
                 {
                     var bytes = await response.Content.ReadAsByteArrayAsync();
-                    await File.WriteAllBytesAsync(filePath, bytes);
+                    await Task.Run(() => File.WriteAllBytes(filePath, bytes));
 
                     var result = $"Screenshot saved to: {filePath}";
                     BrowserActionCompleted?.Invoke(this, result);

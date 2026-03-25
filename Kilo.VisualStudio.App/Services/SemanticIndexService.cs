@@ -246,8 +246,8 @@ namespace Kilo.VisualStudio.App.Services
             {
                 if (doc.Tokens.Contains(token))
                 {
-                    var tf = doc.TermFrequencies.GetValueOrDefault(token, 0);
-                    var idf = _idfScores.GetValueOrDefault(token, 0);
+                    var tf = doc.TermFrequencies.TryGetValue(token, out var tfValue) ? tfValue : 0;
+                    var idf = _idfScores.TryGetValue(token, out var idfValue) ? idfValue : 0;
                     score += tf * idf;
                 }
 
@@ -265,7 +265,7 @@ namespace Kilo.VisualStudio.App.Services
 
             foreach (var token in tokens)
             {
-                tf[token] = tf.GetValueOrDefault(token, 0) + 1;
+                tf[token] = (tf.TryGetValue(token, out var existing) ? existing : 0) + 1;
             }
 
             // Normalize by total token count

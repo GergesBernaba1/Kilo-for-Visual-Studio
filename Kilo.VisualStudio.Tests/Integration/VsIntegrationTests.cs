@@ -121,11 +121,11 @@ namespace Kilo.VisualStudio.Tests.Integration
                 Directory.CreateDirectory(testDir);
 
             var settingsJson = "{\"apiKey\":\"test-key\",\"theme\":\"dark\"}";
-            await File.WriteAllTextAsync(testSettingsFile, settingsJson);
+            await Task.Run(() => File.WriteAllText(testSettingsFile, settingsJson));
             
             Assert.True(File.Exists(testSettingsFile));
             
-            var loaded = await File.ReadAllTextAsync(testSettingsFile);
+            var loaded = await Task.Run(() => File.ReadAllText(testSettingsFile));
             Assert.Equal(settingsJson, loaded);
         }
 
@@ -140,11 +140,11 @@ namespace Kilo.VisualStudio.Tests.Integration
                 Directory.CreateDirectory(sessionDir);
 
             var sessionJson = "[{\"id\":\"test-1\",\"messages\":[]}]";
-            await File.WriteAllTextAsync(sessionFile, sessionJson);
+            await Task.Run(() => File.WriteAllText(sessionFile, sessionJson));
             
             Assert.True(File.Exists(sessionFile));
             
-            var loaded = await File.ReadAllTextAsync(sessionFile);
+            var loaded = await Task.Run(() => File.ReadAllText(sessionFile));
             Assert.Contains("test-1", loaded);
         }
 
@@ -179,11 +179,11 @@ namespace Kilo.VisualStudio.Tests.Integration
             // Create a test encrypted file
             var testFile = Path.Combine(secureStoragePath, "test_secret.bin");
             var testData = new byte[] { 1, 2, 3, 4, 5 };
-            await File.WriteAllBytesAsync(testFile, testData);
+            await Task.Run(() => File.WriteAllBytes(testFile, testData));
             
             Assert.True(File.Exists(testFile));
             
-            var loaded = await File.ReadAllBytesAsync(testFile);
+            var loaded = await Task.Run(() => File.ReadAllBytes(testFile));
             Assert.Equal(testData, loaded);
         }
 

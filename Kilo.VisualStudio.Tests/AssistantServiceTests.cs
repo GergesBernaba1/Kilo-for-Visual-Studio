@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -269,7 +270,7 @@ namespace Kilo.VisualStudio.Tests
             {
                 BaseUrl = "http://127.0.0.1:4096",
                 Password = "test"
-            }, null);
+            }, new AgentModeService(Path.GetTempPath()));
 
             var request = new AssistantRequest
             {
@@ -291,7 +292,7 @@ namespace Kilo.VisualStudio.Tests
         public async Task MockSessionHostAdapter_StreamsArtifactsThroughAssistantService()
         {
             var sessionHostAdapter = new MockKiloSessionHostAdapter();
-            var assistant = new AssistantService(sessionHostAdapter, () => new KiloServerEndpoint(), null);
+            var assistant = new AssistantService(sessionHostAdapter, () => new KiloServerEndpoint(), new AgentModeService(Path.GetTempPath()));
 
             var request = new AssistantRequest
             {
