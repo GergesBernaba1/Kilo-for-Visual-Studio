@@ -179,6 +179,30 @@ namespace Kilo.VisualStudio.Tests
         }
 
         [Fact]
+        public async Task MockBackend_IncludesProviderModelAndCost()
+        {
+            var mockClient = new KiloBackendClient(new HttpClient(), useMock: true);
+
+            var request = new AssistantRequest
+            {
+                ActiveFilePath = "C:\\project\\file.cs",
+                LanguageId = "csharp",
+                SelectedText = "public void Test() { }",
+                Prompt = "Refactor this code",
+                ProviderId = "Anthropic",
+                ModelId = "claude-3-5-sonnet"
+            };
+
+            var result = await mockClient.SendRequestAsync(request);
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal("Anthropic", result.ProviderId);
+            Assert.Equal("claude-3-5-sonnet", result.ModelId);
+            Assert.True(result.UsageCostUsd > 0);
+            Assert.True(result.UsageTokens.HasValue);
+        }
+
+        [Fact]
         public async Task MockBackend_ExplainPrompt_ReturnsExplanation()
         {
             var mockClient = new KiloBackendClient(new HttpClient(), useMock: true);

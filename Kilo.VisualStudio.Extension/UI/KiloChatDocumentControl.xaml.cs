@@ -117,13 +117,23 @@ namespace Kilo.VisualStudio.Extension.UI
 
             try
             {
+                var provider = _settings?.Provider ?? "OpenAI";
+                var model = _settings?.Model ?? "gpt-4o";
+                if (_settings?.Profile == "Reviewer")
+                {
+                    provider = "Anthropic";
+                    model = "claude-3-5-reasonable";
+                }
+
                 var request = new AssistantRequest
                 {
                     ActiveFilePath = _activeFilePath,
                     LanguageId = _languageId,
                     SelectedText = string.Empty,
                     Prompt = prompt,
-                    SessionId = _currentSessionId
+                    SessionId = _currentSessionId,
+                    ProviderId = provider,
+                    ModelId = $"{provider}:{model}"
                 };
 
                 var result = await _assistantService.AskAssistantAsync(request, _activeCts.Token);
@@ -132,9 +142,21 @@ namespace Kilo.VisualStudio.Extension.UI
                 {
                     AddMessage("assistant", $"Error: {result.Error ?? result.Message}");
                 }
-                else if (!string.IsNullOrWhiteSpace(result.Message))
+                else
                 {
-                    AddMessage("assistant", result.Message);
+                    if (!string.IsNullOrWhiteSpace(result.Message))
+                    {
+                        AddMessage("assistant", result.Message);
+                    }
+
+                    if (result.UsageCostUsd > 0)
+                    {
+                        StatusText.Text = $"Done (Provider={result.ProviderId ?? "unknown"}, Model={result.ModelId ?? "unknown"}, Cost=${result.UsageCostUsd:F4}, Tokens={result.UsageTokens ?? 0})";
+                    }
+                    else
+                    {
+                        StatusText.Text = $"Done (Provider={result.ProviderId ?? "unknown"}, Model={result.ModelId ?? "unknown"})";
+                    }
                 }
             }
             catch (OperationCanceledException)

@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -11,6 +14,7 @@ using System.Windows.Threading;
 using Kilo.VisualStudio.App.Services;
 using Kilo.VisualStudio.Contracts.Models;
 using Kilo.VisualStudio.Extension.Models;
+using Microsoft.VisualStudio.Shell;
 
 namespace Kilo.VisualStudio.Extension.UI
 {
@@ -87,6 +91,7 @@ namespace Kilo.VisualStudio.Extension.UI
 
     public sealed class FileDiffViewModel
     {
+        public bool IsSelected { get; set; }
         public string FilePath { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public int Additions { get; set; }
@@ -145,14 +150,35 @@ namespace Kilo.VisualStudio.Extension.UI
         private string _currentSessionId = string.Empty;
         private CancellationTokenSource? _activeCts;
 
+        private TelemetryService? _telemetryService;
+        private PerformanceService? _performanceService;
+        private CollaborationService? _collaborationService;
+        private RoslynAnalyzerService? _roslynAnalyzerService;
+        private SkillsSystemService? _skillsSystemService;
+
         private readonly ObservableCollection<SessionViewModel> _sessions = new ObservableCollection<SessionViewModel>();
+        private readonly ObservableCollection<string> _conversationHistory = new ObservableCollection<string>();
         private readonly ObservableCollection<ToolCardViewModel> _toolCards = new ObservableCollection<ToolCardViewModel>();
         private readonly ObservableCollection<FileDiffViewModel> _fileDiffs = new ObservableCollection<FileDiffViewModel>();
+        private readonly ObservableCollection<UsageHistoryItem> _usageHistory = new ObservableCollection<UsageHistoryItem>();
+
+        public sealed class UsageHistoryItem
+        {
+            public DateTime Timestamp { get; set; }
+            public string Provider { get; set; } = string.Empty;
+            public string Model { get; set; } = string.Empty;
+            public double Cost { get; set; }
+            public int? Tokens { get; set; }
+
+            public override string ToString() => $"{Timestamp:HH:mm:ss} | {Provider}/{Model} | Cost=${Cost:F4} | Tokens={Tokens ?? 0}";
+        }
 
         public KiloAssistantToolWindowControl()
         {
             InitializeComponent();
             SessionComboBox.ItemsSource = _sessions;
+            ConversationHistoryListBox.ItemsSource = _conversationHistory;
+            UsageHistoryListBox.ItemsSource = _usageHistory;
             ToolCardsList.ItemsSource = _toolCards;
             DiffFilesList.ItemsSource = _fileDiffs;
             UpdateConnectionState(KiloConnectionState.Disconnected);
@@ -160,10 +186,30 @@ namespace Kilo.VisualStudio.Extension.UI
 
         // ── Initialization ───────────────────────────────────────────────────────
 
-        public void Initialize(AssistantService assistantService, ExtensionSettings settings)
+        private McpHubService? _mcpHubService;
+
+        public void Initialize(AssistantService assistantService, ExtensionSettings settings, McpHubService mcpHubService, string workspaceRoot,
+            TelemetryService telemetryService, PerformanceService performanceService,
+            CollaborationService collaborationService, RoslynAnalyzerService roslynAnalyzerService,
+            SkillsSystemService skillsSystemService)
         {
             _assistantService = assistantService ?? throw new ArgumentNullException(nameof(assistantService));
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            _mcpHubService = mcpHubService ?? throw new ArgumentNullException(nameof(mcpHubService));
+            _telemetryService = telemetryService;
+            _performanceService = performanceService;
+            _collaborationService = collaborationService;
+            _roslynAnalyzerService = roslynAnalyzerService;
+            _skillsSystemService = skillsSystemService;
+
+            if (_telemetryService != null)
+            {
+                _telemetryService.SetUserConsent(_settings.EnableTelemetry);
+                _telemetryService.SetTelemetryEnabled(_settings.EnableTelemetry);
+            }
+
+            _workspaceRoot = workspaceRoot ?? Environment.CurrentDirectory;
+            LoadSessionHistory();
 
             var credential = !string.IsNullOrEmpty(settings.BackendPassword)
                 ? settings.BackendPassword : settings.KiloApiKey;
@@ -177,6 +223,19 @@ namespace Kilo.VisualStudio.Extension.UI
             {
                 UpdateModeDisplay(agentModeService.CurrentModeDefinition);
                 agentModeService.ModeChanged += OnAgentModeChanged;
+            }
+
+            if (_skillsSystemService != null)
+            {
+                SkillsListBox.ItemsSource = _skillsSystemService.Skills;
+            }
+
+            if (_mcpHubService != null)
+            {
+                _mcpHubService.ServersChanged += OnMcpServersChanged;
+                _mcpHubService.HealthLogUpdated += OnMcpHealthLogUpdated;
+                _mcpHubService.PoorHealthDetected += OnMcpPoorHealthDetected;
+                _ = LoadMcpServersAsync();
             }
 
             // Wire live streaming events.
@@ -194,8 +253,229 @@ namespace Kilo.VisualStudio.Extension.UI
                 {
                     UpdateModeDisplay(agentModeService.CurrentModeDefinition);
                     SetStatus($"Mode switched to: {agentModeService.CurrentModeDefinition.Name}");
+
+                    if (_settings != null)
+                    {
+                        _settings.Profile = agentModeService.CurrentModeDefinition.Name;
+                        ApplyProfileProviderModel();
+                        _settings.Save();
+                    }
                 }
             }, DispatcherPriority.Normal);
+        }
+
+        private void ApplyProfileProviderModel()
+        {
+            if (_settings == null) return;
+
+            var profile = _settings.Profile ?? "Default";
+            if (_settings.ProfileProviderMapping.TryGetValue(profile, out var mappedProvider))
+            {
+                _settings.Provider = mappedProvider;
+            }
+
+            if (_settings.ProfileModelMapping.TryGetValue(profile, out var mappedModel))
+            {
+                _settings.Model = mappedModel;
+            }
+        }
+
+        private void OnMcpServersChanged(object? sender, EventArgs e)
+        {
+            Dispatcher.Invoke(() => { _ = LoadMcpServersAsync(); }, DispatcherPriority.Normal);
+        }
+
+        private void OnMcpHealthLogUpdated(object? sender, McpHealthLogEntry logEntry)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                if (McpHealthLogListBox != null)
+                {
+                    McpHealthLogListBox.Items.Insert(0, logEntry.ToString());
+                }
+            }, DispatcherPriority.Normal);
+        }
+
+        private void OnMcpPoorHealthDetected(object? sender, EventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                SetStatus("Poor MCP health detected; switching to Optimizer mode.");
+                KiloPackage.AgentModeServiceInstance?.SetMode(AgentMode.Optimizer);
+            }, DispatcherPriority.Normal);
+        }
+
+        private string _workspaceRoot = string.Empty;
+        private string _sessionHistoryPath => Path.Combine(_workspaceRoot, ".kilo", "session_history.json");
+
+        private void LoadSessionHistory()
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(_workspaceRoot))
+                    return;
+
+                if (!File.Exists(_sessionHistoryPath))
+                    return;
+
+                var json = File.ReadAllText(_sessionHistoryPath);
+                var list = JsonSerializer.Deserialize<List<string>>(json) ?? new List<string>();
+                _conversationHistory.Clear();
+                foreach (var item in list)
+                    _conversationHistory.Insert(0, item);
+            }
+            catch { }
+        }
+
+        private void SaveSessionHistory()
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(_workspaceRoot))
+                    return;
+
+                var dir = Path.GetDirectoryName(_sessionHistoryPath);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+
+                File.WriteAllText(_sessionHistoryPath, JsonSerializer.Serialize(_conversationHistory.ToList(), new JsonSerializerOptions { WriteIndented = true }));
+            }
+            catch { }
+        }
+
+        private void AppendConversationHistory(string entry)
+        {
+            if (string.IsNullOrWhiteSpace(entry))
+                return;
+
+            _conversationHistory.Insert(0, $"[{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}] {entry}");
+            if (_conversationHistory.Count > 100)
+                _conversationHistory.RemoveAt(_conversationHistory.Count - 1);
+
+            SaveSessionHistory();
+        }
+
+        private void McpSearchBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            _ = LoadMcpServersAsync();
+        }
+
+        private async void McpRefreshButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_mcpHubService == null)
+                return;
+
+            var remoteUrl = McpInventoryUrlBox?.Text?.Trim();
+            if (!string.IsNullOrWhiteSpace(remoteUrl))
+            {
+                var loaded = await _mcpHubService.QueryRemoteCommunityServersAsync(remoteUrl);
+                if (loaded.Any())
+                {
+                    SetStatus($"Loaded {loaded.Count} community MCP servers.");
+                }
+                else
+                {
+                    SetStatus("No servers loaded from remote inventory.");
+                }
+            }
+
+            await LoadMcpServersAsync();
+        }
+
+        private void McpAutoModeButton_Click(object sender, RoutedEventArgs e)
+        {
+            KiloPackage.AgentModeServiceInstance?.SetMode(AgentMode.Optimizer);
+        }
+
+        private async Task LoadMcpServersAsync()
+        {
+            if (_mcpHubService == null)
+                return;
+
+            var available = await _mcpHubService.GetAvailableServersAsync();
+            var known = _mcpHubService.Servers;
+
+            var merged = known
+                .Union(available, new McpServerConfigComparer())
+                .ToList();
+
+            var searchText = McpSearchBox?.Text?.Trim();
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                var query = searchText;
+                merged = merged.Where(s => s.Id.Contains(query, StringComparison.OrdinalIgnoreCase)
+                    || s.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
+                    || s.Description.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            McpServersListBox.ItemsSource = merged;
+
+            if (McpHealthLogListBox != null)
+            {
+                McpHealthLogListBox.ItemsSource = _mcpHubService.HealthLog.Select(h => h.ToString()).ToList();
+            }
+        }
+
+        private async void McpToggleServer_Click(object sender, RoutedEventArgs e)
+        {
+            if (_mcpHubService == null || McpServersListBox.SelectedItem is not McpServerConfig selected)
+                return;
+
+            _mcpHubService.EnableServer(selected.Id, !selected.Enabled);
+            await LoadMcpServersAsync();
+        }
+
+        private async void McpRestartServer_Click(object sender, RoutedEventArgs e)
+        {
+            if (_mcpHubService == null || McpServersListBox.SelectedItem is not McpServerConfig selected)
+                return;
+
+            await _mcpHubService.RestartServerAsync(selected.Id);
+            await LoadMcpServersAsync();
+        }
+
+        private async void McpInstallServer_Click(object sender, RoutedEventArgs e)
+        {
+            if (_mcpHubService == null || McpServersListBox.SelectedItem is not McpServerConfig selected)
+                return;
+
+            _mcpHubService.AddServer(new McpServerConfig
+            {
+                Id = selected.Id,
+                Name = selected.Name,
+                Description = selected.Description,
+                Command = selected.Command,
+                Args = selected.Args.ToList(),
+                Enabled = true,
+                Status = "Running",
+                Score = selected.Score,
+                Tags = selected.Tags.ToList(),
+                DocumentationUrl = selected.DocumentationUrl
+            });
+
+            await LoadMcpServersAsync();
+        }
+
+        private void McpServersListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (McpServersListBox.SelectedItem is McpServerConfig selected)
+            {
+                McpServerScoreText.Text = $"Score: {selected.Score:0.##}";
+                McpServerTagsText.Text = selected.Tags.Any() ? $"Tags: {string.Join(", ", selected.Tags)}" : "Tags: n/a";
+                McpServerDocsText.Text = string.IsNullOrWhiteSpace(selected.DocumentationUrl) ? "Docs: n/a" : $"Docs: {selected.DocumentationUrl}";
+            }
+        }
+
+        private void McpDiffPatchButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (McpServersListBox.SelectedItem is McpServerConfig selected)
+            {
+                var url = selected.DocumentationUrl;
+                if (!string.IsNullOrWhiteSpace(url))
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+                else
+                    SetStatus("No documentation URL available for selected MCP server.");
+            }
         }
 
         public void SetContext(string activeFilePath, string selectedText, string languageId)
@@ -287,6 +567,7 @@ namespace Kilo.VisualStudio.Extension.UI
                     case KiloSessionEventKind.TurnCompleted:
                         SetBusy(false, "Done.");
                         ShowDiffSectionIfNeeded();
+                        AppendConversationHistory("Turn completed");
                         break;
                     case KiloSessionEventKind.Error:
                         SetBusy(false, $"Error: {e.Error}");
@@ -312,7 +593,12 @@ namespace Kilo.VisualStudio.Extension.UI
 
         private void OnTextDelta(object? sender, string delta)
         {
-            Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() => AppendResponse(delta)));
+            Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() =>
+            {
+                AppendResponse(delta);
+                if (!string.IsNullOrWhiteSpace(delta))
+                    AppendConversationHistory($"Delta: {delta.Trim().Replace("\r\n", " ").Replace("\n", " ")}");
+            }));
         }
 
         private void OnToolExecutionChanged(object? sender, KiloToolExecution tool)
@@ -394,6 +680,7 @@ namespace Kilo.VisualStudio.Extension.UI
             {
                 _fileDiffs.Add(new FileDiffViewModel
                 {
+                    IsSelected = false,
                     FilePath = d.FilePath,
                     Status = d.Status,
                     Additions = d.Additions,
@@ -412,6 +699,20 @@ namespace Kilo.VisualStudio.Extension.UI
         {
             if (_fileDiffs.Count > 0)
                 DiffExpander.IsExpanded = true;
+
+            UpdateDiffActionButtons();
+        }
+
+        private void DiffItemSelectionChanged(object sender, RoutedEventArgs e)
+        {
+            UpdateDiffActionButtons();
+        }
+
+        private void UpdateDiffActionButtons()
+        {
+            var hasSelected = _fileDiffs.Any(f => f.IsSelected);
+            ApplySelectedDiffsButton.IsEnabled = hasSelected;
+            PreviewSelectedDiffsButton.IsEnabled = hasSelected;
         }
 
         // ── UI state helpers ─────────────────────────────────────────────────────
@@ -461,6 +762,9 @@ namespace Kilo.VisualStudio.Extension.UI
             ApplyAllDiffsButton.IsEnabled = false;
             RevertChangesButton.IsEnabled = false;
 
+            _telemetryService?.LogFeatureUsageAsync("assistant_query");
+
+            var perfScope = _performanceService?.StartMeasure("assistant_query");
             SetBusy(true, "Sending to Kilo…");
 
             _activeCts?.Cancel();
@@ -468,13 +772,24 @@ namespace Kilo.VisualStudio.Extension.UI
 
             try
             {
+                var provider = _settings?.Provider ?? "OpenAI";
+                var model = _settings?.Model ?? "gpt-4o";
+                if (_settings?.Profile == "Reviewer")
+                {
+                    // Reviewer mode favors a review-optimized model
+                    provider = "Anthropic";
+                    model = "claude-3-5-reasonable";
+                }
+
                 var request = new AssistantRequest
                 {
                     ActiveFilePath = _activeFilePath,
                     LanguageId = _languageId,
                     SelectedText = SelectedTextArea.Text,
                     Prompt = PromptTextBox.Text,
-                    SessionId = _currentSessionId
+                    SessionId = _currentSessionId,
+                    ProviderId = provider,
+                    ModelId = $"{provider}:{model}"
                 };
 
                 var result = await _assistantService.AskAssistantAsync(request, _activeCts.Token);
@@ -483,10 +798,36 @@ namespace Kilo.VisualStudio.Extension.UI
                 {
                     ResponseTextBox.AppendText($"\n⚠ {result.Error ?? result.Message}");
                 }
-                else if (!string.IsNullOrWhiteSpace(result.SuggestedCode))
+                else
                 {
-                    SuggestedCodeText.Text = result.SuggestedCode;
-                    SuggestedCodeExpander.IsExpanded = true;
+                    if (!string.IsNullOrWhiteSpace(result.SuggestedCode))
+                    {
+                        SuggestedCodeText.Text = result.SuggestedCode;
+                        SuggestedCodeExpander.IsExpanded = true;
+                    }
+
+                    var providerId = result.ProviderId ?? _settings?.Provider ?? "unknown";
+                    var modelId = result.ModelId ?? _settings?.Model ?? "unknown";
+                    var cost = result.UsageCostUsd;
+                    var tokens = result.UsageTokens ?? 0;
+
+                    if (cost > 0)
+                    {
+                        SetStatus($"Done (Provider={providerId}, Model={modelId}, Cost=${cost:F4}, Tokens={tokens})");
+                    }
+                    else
+                    {
+                        SetStatus($"Done (Provider={providerId}, Model={modelId})");
+                    }
+
+                    _usageHistory.Insert(0, new UsageHistoryItem
+                    {
+                        Timestamp = DateTime.Now,
+                        Provider = providerId,
+                        Model = modelId,
+                        Cost = cost,
+                        Tokens = result.UsageTokens
+                    });
                 }
             }
             catch (OperationCanceledException)
@@ -499,6 +840,19 @@ namespace Kilo.VisualStudio.Extension.UI
             }
             finally
             {
+                perfScope?.Dispose();
+
+                try
+                {
+                    var memory = GC.GetTotalMemory(false);
+                    _performanceService?.RecordMemory(memory);
+
+                    ThreadPool.GetAvailableThreads(out var workerThreads, out var completionPortThreads);
+                    ThreadPool.GetMaxThreads(out var maxWorkerThreads, out var maxCompletionPortThreads);
+                    _performanceService?.RecordThreadPoolUsage(maxWorkerThreads - workerThreads, workerThreads);
+                }
+                catch { }
+
                 SetBusy(false, string.Empty);
             }
         }
@@ -592,10 +946,133 @@ namespace Kilo.VisualStudio.Extension.UI
             }
         }
 
+        private void RunSkillButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (SkillsListBox.SelectedItem is Kilo.VisualStudio.App.Services.SkillDefinition skill)
+            {
+                var inputText = string.IsNullOrWhiteSpace(SelectedTextArea.Text) ? "" : SelectedTextArea.Text;
+                PromptTextBox.Text = skill.PromptTemplate.Replace("{input}", inputText);
+                SetStatus($"Skill '{skill.Name}' loaded into prompt.");
+
+                _telemetryService?.LogEventAsync("skill_run", new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "skill", skill.Name }
+                });
+            }
+            else
+            {
+                SetStatus("Select a skill first.");
+            }
+        }
+
+        private async void ShareSessionButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_collaborationService == null)
+            {
+                SetStatus("Collaboration not initialized.");
+                return;
+            }
+
+            if (!_settings?.EnableSessionSharing ?? true)
+            {
+                SetStatus("Session sharing is disabled in settings.");
+                return;
+            }
+
+            var link = _collaborationService.ShareSession(_currentSessionId, _conversationHistory);
+            Clipboard.SetText(link);
+            SetStatus("Session share link copied to clipboard.");
+
+            _telemetryService?.LogEventAsync("share_session", new System.Collections.Generic.Dictionary<string, string>
+            {
+                { "shareLink", link }
+            });
+        }
+
+        private async void AnalyzeFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(_activeFilePath) || !File.Exists(_activeFilePath))
+            {
+                SetStatus("No active file selected for analysis.");
+                return;
+            }
+
+            if (_roslynAnalyzerService == null)
+            {
+                SetStatus("Analyzer service currently unavailable.");
+                return;
+            }
+
+            SetBusy(true, "Analyzing active file...");
+            try
+            {
+                var report = await _roslynAnalyzerService.AnalyzeFileAsync(_activeFilePath);
+                MessageBox.Show(report, "Roslyn Analyzer Report", MessageBoxButton.OK, MessageBoxImage.Information);
+                _telemetryService?.LogFeatureUsageAsync("roslyn_analyze");
+            }
+            catch (Exception ex)
+            {
+                SetStatus($"Analysis failed: {ex.Message}");
+                _telemetryService?.LogErrorAsync("RoslynAnalyze", ex.Message, ex.StackTrace);
+            }
+            finally
+            {
+                SetBusy(false, string.Empty);
+            }
+        }
+
+        private void RefreshPerfButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_performanceService == null)
+            {
+                PerformanceStatsText.Text = "Perf service unavailable.";
+                return;
+            }
+
+            PerformanceStatsText.Text = _performanceService.GetPerformanceReport();
+            _telemetryService?.LogFeatureUsageAsync("perf_refresh");
+        }
+
         private void ApplyAllDiffsButton_Click(object sender, RoutedEventArgs e)
         {
             if (_fileDiffs.Count == 0) return;
             ApplyDiffsRequested?.Invoke(this, _fileDiffs.ToList());
+        }
+
+        private void ApplySelectedDiffsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var selected = _fileDiffs.Where(f => f.IsSelected).ToList();
+            if (selected.Count == 0) return;
+            ApplyDiffsRequested?.Invoke(this, selected);
+        }
+
+        private void PreviewSelectedDiffsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var selected = _fileDiffs.Where(f => f.IsSelected).ToList();
+            if (selected.Count == 0)
+            {
+                SetStatus("No selected files to preview.");
+                return;
+            }
+
+            var report = string.Join("\n\n", selected.Select(f => $"{f.FilePath}: +{f.Additions} -{f.Deletions}\n{f.DiffText}"));
+            MessageBox.Show(report, "Selected Diff Preview", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void ApplyFileDiffButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is FileDiffViewModel fileDiff)
+            {
+                ApplyDiffsRequested?.Invoke(this, new[] { fileDiff });
+            }
+        }
+
+        private void OpenFileFromDiff_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is FileDiffViewModel fileDiff)
+            {
+                OpenFileRequested?.Invoke(this, fileDiff.FilePath);
+            }
         }
 
         private void RevertChangesButton_Click(object sender, RoutedEventArgs e)
@@ -616,6 +1093,7 @@ namespace Kilo.VisualStudio.Extension.UI
         public event EventHandler<string>? SessionSelected;
         public event EventHandler<string>? DeleteSessionRequested;
         public event EventHandler<IReadOnlyList<FileDiffViewModel>>? ApplyDiffsRequested;
+        public event EventHandler<string>? OpenFileRequested;
         public event EventHandler<string>? RevertRequested;
 
         // ── Public methods for external callers ───────────────────────────────────

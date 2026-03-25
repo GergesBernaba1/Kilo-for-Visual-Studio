@@ -407,7 +407,10 @@ namespace Kilo.VisualStudio.App.Services
                 if (File.Exists(_customModesFilePath))
                 {
                     var json = File.ReadAllText(_customModesFilePath);
-                    var customModes = JsonSerializer.Deserialize<Dictionary<string, AgentModeDefinition>>(json);
+                    var customModes = JsonSerializer.Deserialize<Dictionary<string, AgentModeDefinition>>(json, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
                     if (customModes != null)
                     {
                         foreach (var kvp in customModes)

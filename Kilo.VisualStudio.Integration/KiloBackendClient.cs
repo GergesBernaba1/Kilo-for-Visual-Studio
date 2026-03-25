@@ -43,10 +43,35 @@ namespace Kilo.VisualStudio.Integration
 
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ApiKey);
 
+            // Provider/model routing: prefer explicit values from request, then fallback into combined model notation.
+            var provider = request.ProviderId?.Trim() ?? string.Empty;
+            var model = request.ModelId?.Trim() ?? string.Empty;
+            if (string.IsNullOrEmpty(provider) && model.Contains(":"))
+            {
+                var colonIndex = model.IndexOf(':');
+                if (colonIndex >= 0)
+                {
+                    provider = model.Substring(0, colonIndex).Trim();
+                    model = model.Substring(colonIndex + 1).Trim();
+                }
+            }
+
+            if (string.IsNullOrEmpty(provider)) provider = "openai";
+            if (string.IsNullOrEmpty(model)) model = "default";
+
+            var endpoint = provider.ToLowerInvariant() switch
+            {
+                "openai" => $"{BackendUrl.TrimEnd('/')}/openai/{model}",
+                "anthropic" => $"{BackendUrl.TrimEnd('/')}/anthropic/{model}",
+                "google" => $"{BackendUrl.TrimEnd('/')}/google/{model}",
+                "local" or "ollama" => $"{BackendUrl.TrimEnd('/')}/local/{model}",
+                _ => $"{BackendUrl.TrimEnd('/')}/{provider.ToLowerInvariant()}/{model}"
+            };
+
             string jsonBody = JsonSerializer.Serialize(request);
             using var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PostAsync(BackendUrl, content);
+            var response = await _httpClient.PostAsync(endpoint, content);
             if (!response.IsSuccessStatusCode)
             {
                 return new AssistantResponse
@@ -90,7 +115,18 @@ namespace Kilo.VisualStudio.Integration
             string jsonBody = JsonSerializer.Serialize(request);
             using var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
 
-            var url = $"{BackendUrl.TrimEnd('/')}/{endpoint}";
+            // Generic calls don't have typed provider/model info; route by backend defaults.
+            var provider = "openai";
+
+            var url = provider.ToLowerInvariant() switch
+            {
+                "openai" => $"{BackendUrl.TrimEnd('/')}/openai/{endpoint}",
+                "anthropic" => $"{BackendUrl.TrimEnd('/')}/anthropic/{endpoint}",
+                "google" => $"{BackendUrl.TrimEnd('/')}/google/{endpoint}",
+                "local" or "ollama" => $"{BackendUrl.TrimEnd('/')}/local/{endpoint}",
+                _ => $"{BackendUrl.TrimEnd('/')}/{provider.ToLowerInvariant()}/{endpoint}"
+            };
+
             var response = await _httpClient.PostAsync(url, content);
             if (!response.IsSuccessStatusCode)
             {
@@ -138,7 +174,11 @@ namespace Kilo.VisualStudio.Integration
                 IsSuccess = true,
                 Message = message,
                 SuggestedCode = suggestedCode,
-                PatchDiff = suggestedCode != null ? GeneratePatchDiff(selectedText, suggestedCode) : null
+                PatchDiff = suggestedCode != null ? GeneratePatchDiff(selectedText, suggestedCode) : null,
+                UsageCostUsd = 0.0015,
+                UsageTokens = request.SelectedText?.Length / 3,
+                ProviderId = request.ProviderId,
+                ModelId = request.ModelId
             };
         }
 

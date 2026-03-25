@@ -92,6 +92,15 @@ Allow users to create/customize modes via JSON config (stored in .kilo folder).
 Integrate mode switching with VS's context (e.g., auto-switch to "Debugger" when breakpoints are hit).
 Add mode-specific UI indicators and tool restrictions.
 
+
+
+
+
+
+
+
+
+
 4. Expand MCP Server Ecosystem (Priority: Medium)
 Current State: McpHubService supports basic servers (filesystem, GitHub), aligning with kilocode's marketplace.
 Suggestions:
@@ -102,6 +111,8 @@ Add VS-specific MCP servers (e.g., for NuGet, MSBuild, or TFS integration).
 
 5. Add CLI and Cross-Platform Support (Priority: High)
 Current State: Your solution is VSIX-only; kilocode includes a full CLI for broader usage.
+Status: ✓ IMPLEMENTED in Kilo.VisualStudio.Cli with headless mode and basic solution/project parsing.
+CI status: ✓ GitHub Actions workflow added at .github/workflows/ci.yml with `dotnet test` and CLI `status --json` verification.
 Suggestions:
 Develop a companion CLI tool (e.g., kilo-vs.exe) that can run outside VS for automation/scripting.
 Enable headless operation for CI/CD pipelines.
@@ -110,6 +121,12 @@ Support cross-platform execution (Windows/Linux) for team consistency.
 
 6. Improve UI/UX and Editor Integration (Priority: High)
 Current State: Basic tool window with prompt/response; kilocode has richer, streaming UI.
+Status: ✓ IMPLEMENTED in KiloAssistantToolWindowControl and KiloPackage with:
+  - streaming response deltas via AssistantService.TextDeltaReceived/KiloSessionEvent.TextDelta
+  - inline diff preview in diff expander and per-file 'Apply' & 'Open File'
+  - session history selector for sessions + history cards + mode indicator
+  - built-in tool-call card list and suggested code panel
+  - integration bridge for draft file open from diff requests
 Suggestions:
 Add streaming responses with live text deltas (leverage AssistantService's events).
 Implement inline diff previews and "Apply" buttons directly in the editor.

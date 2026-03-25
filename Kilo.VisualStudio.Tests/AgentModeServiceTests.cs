@@ -1,7 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Kilo.VisualStudio.App.Services;
+using Kilo.VisualStudio.Extension;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
+using Moq;
 using Xunit;
 
 namespace Kilo.VisualStudio.Tests
@@ -117,6 +123,38 @@ namespace Kilo.VisualStudio.Tests
         }
 
         [Fact]
+        public async Task McpHubService_LoadsAndRestartsServers()
+        {
+            var tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tempPath);
+
+            var mcphub = new McpHubService(tempPath);
+            var available = await mcphub.GetAvailableServersAsync();
+            Assert.Contains(available, s => s.Id == "nuget");
+            Assert.Contains(available, s => s.Id == "msbuild");
+
+            var server = available.First(s => s.Id == "nuget");
+            mcphub.AddServer(new McpServerConfig
+            {
+                Id = "nuget-test",
+                Name = "NuGet Test",
+                Description = "Test custom nuget server",
+                Command = server.Command,
+                Args = server.Args,
+                Enabled = true
+            });
+
+            var addedServer = mcphub.Servers.FirstOrDefault(s => s.Name == "NuGet Test");
+            Assert.NotNull(addedServer);
+            Assert.Equal("Running", addedServer.Status);
+
+            var state = await mcphub.RestartServerAsync(addedServer!.Id);
+            Assert.True(state == "Running" || state == "Disabled" || state == "Healthy");
+
+            Directory.Delete(tempPath, true);
+        }
+
+        [Fact]
         public void BuiltInModes_HaveCorrectProperties()
         {
             // Arrange
@@ -175,6 +213,129 @@ namespace Kilo.VisualStudio.Tests
 
             // Cleanup
             Directory.Delete(tempDir, true);
+        }
+
+        [Fact]
+        public async Task McpHubService_QueryRemoteCommunityServersAsync_FallbacksToLocalCache()
+        {
+            var tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tempPath);
+            Directory.CreateDirectory(Path.Combine(tempPath, ".kilo"));
+
+            var cache = new[]
+            {
+                new McpServerConfig
+                {
+                    Id = "community-1",
+                    Name = "Community 1",
+                    Description = "cached community server",
+                    Command = "npx",
+                    Args = new List<string> { "-y", "@modelcontextprotocol/server-fake" },
+                    Enabled = true,
+                    Score = 4.2,
+                    Tags = new List<string> { "community", "database" },
+                    DocumentationUrl = "https://example.org/docs/community1"
+                }
+            };
+
+            File.WriteAllText(Path.Combine(tempPath, ".kilo", "mcp_community_cache.json"),
+                System.Text.Json.JsonSerializer.Serialize(cache, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+
+            var hub = new McpHubService(tempPath);
+            var result = await hub.QueryRemoteCommunityServersAsync("http://127.0.0.1:1/invalid");
+
+            Assert.Single(result);
+            Assert.Contains(hub.Servers, s => s.Id == "community-1");
+            Assert.Equal(4.2, hub.Servers.First(s => s.Id == "community-1").Score);
+
+            Directory.Delete(tempPath, true);
+        }
+
+        [Fact]
+        public async Task McpHubService_HealthCheckTimer_TriggersPoorHealthEvent()
+        {
+            var tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tempPath);
+
+            var hub = new McpHubService(tempPath);
+            hub.AutoModeThreshold = McpAutoModeThreshold.Low;
+
+            hub.AddServer(new McpServerConfig
+            {
+                Id = "unhealthy-1",
+                Name = "Unhealthy Server",
+                Description = "No args so unhealthy",
+                Command = "npx",
+                Args = new List<string>(),
+                Enabled = true
+            });
+
+            var addedServer = hub.Servers.Single(s => s.Name == "Unhealthy Server");
+
+            var triggered = false;
+            hub.PoorHealthDetected += (_, __) => triggered = true;
+
+            var method = typeof(McpHubService).GetMethod("HealthCheckTimer_Elapsed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            method?.Invoke(hub, new object?[] { null, null });
+
+            await Task.Delay(1200);
+
+            Assert.True(triggered, "Poor health event should be raised when server is unhealthy.");
+            Assert.Contains(hub.HealthLog, l => l.ServerId == addedServer.Id && l.Message.IndexOf("unhealthy", StringComparison.OrdinalIgnoreCase) >= 0);
+
+            Directory.Delete(tempPath, true);
+        }
+
+        [Fact]
+        public async Task McpHubService_SearchServers_FindsEntries_ByMetadataFields()
+        {
+            var tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tempPath);
+
+            var hub = new McpHubService(tempPath);
+            hub.AddServer(new McpServerConfig
+            {
+                Id = "search-test",
+                Name = "Search Test",
+                Description = "Server used for query testing",
+                Command = "npx",
+                Args = new List<string> { "-y", "@modelcontextprotocol/server-test" },
+                Enabled = true,
+                Score = 8.9,
+                Tags = new List<string> { "search", "test" },
+                DocumentationUrl = "https://papertrail.dev/docs/search-test"
+            });
+
+            var byName = hub.SearchServers("Search Test");
+            Assert.Single(byName);
+
+            var byDescription = hub.SearchServers("query testing");
+            Assert.Single(byDescription);
+
+            var noResult = hub.SearchServers("non-existing");
+            Assert.Empty(noResult);
+
+            Directory.Delete(tempPath, true);
+        }
+
+        [Fact]
+        public void KiloSuggestedActionsSource_RaisesSuggestedActionsChanged_WhenSelectionChanged()
+        {
+            var mockSelection = new Mock<ITextSelection>();
+            var mockTextView = new Mock<ITextView>();
+            var mockTextBuffer = new Mock<ITextBuffer>();
+
+            mockTextView.Setup(tv => tv.Selection).Returns(mockSelection.Object);
+
+            var source = new KiloSuggestedActionsSource(mockTextView.Object, mockTextBuffer.Object);
+            var raised = false;
+            source.SuggestedActionsChanged += (_, __) => raised = true;
+
+            mockSelection.Raise(x => x.SelectionChanged += null!, EventArgs.Empty);
+
+            Assert.True(raised);
+
+            source.Dispose();
         }
     }
 }

@@ -7,5 +7,9 @@ namespace Kilo.VisualStudio.Contracts.Models
         public string SelectedText { get; set; } = string.Empty;
         public string Prompt { get; set; } = string.Empty;
         public string SessionId { get; set; } = string.Empty;
+
+        // AI provider/model configuration
+        public string ProviderId { get; set; } = "OpenAI";
+        public string ModelId { get; set; } = "gpt-4o";
     }
 }

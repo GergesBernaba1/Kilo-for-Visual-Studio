@@ -11,7 +11,13 @@ namespace Kilo.VisualStudio.Extension.Models
         public bool UseMockBackend { get; set; } = true;
         public string BackendUrl { get; set; } = "http://127.0.0.1:4096";
         public string Profile { get; set; } = "Default";
-        public string Model { get; set; } = "OpenAI: gpt-4o";
+        public string Provider { get; set; } = "OpenAI";
+        public string Model { get; set; } = "gpt-4o";
+
+        // Per-profile overrides
+        public System.Collections.Generic.Dictionary<string, string> ProfileProviderMapping { get; set; } = new();
+        public System.Collections.Generic.Dictionary<string, string> ProfileModelMapping { get; set; } = new();
+
         public bool AutoApproveTools { get; set; } = false;
         public bool AutoScrollResponses { get; set; } = true;
         public bool PlaySounds { get; set; } = false;
@@ -24,6 +30,8 @@ namespace Kilo.VisualStudio.Extension.Models
         public string AutocompleteTriggerCharacters { get; set; } = ".";
         public bool AutocompleteOnTyping { get; set; } = false;
         public int AutocompleteDelayMs { get; set; } = 300;
+        public bool EnableTelemetry { get; set; } = false;
+        public bool EnableSessionSharing { get; set; } = true;
         public string LastSessionId { get; set; } = string.Empty;
         public string LastProfile { get; set; } = "Default";
 

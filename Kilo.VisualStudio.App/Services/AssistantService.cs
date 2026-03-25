@@ -135,7 +135,9 @@ namespace Kilo.VisualStudio.App.Services
                 SelectedText = request.SelectedText,
                 LanguageId = request.LanguageId,
                 Prompt = request.Prompt,
-                Agent = _agentModeService?.CurrentModeDefinition.Id ?? "default"
+                Agent = _agentModeService?.CurrentModeDefinition.Id ?? "default",
+                ProviderId = request.ProviderId,
+                ModelId = request.ModelId
             };
 
             return await SendAndCollectAsync(session.SessionId, chatRequest, linkedCts.Token);

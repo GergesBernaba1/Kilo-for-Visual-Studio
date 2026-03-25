@@ -163,6 +163,32 @@
                     </Border>
                 </StackPanel>
 
+                <!-- Conversation history -->
+                <StackPanel Margin="0,0,0,8">
+                    <TextBlock Text="Conversation History" FontSize="11" FontWeight="SemiBold"
+                               Foreground="#9CA3AF" Margin="0,0,0,2" />
+                    <ListBox x:Name="ConversationHistoryListBox"
+                             Height="120"
+                             Background="#111827"
+                             Foreground="#D1D5DB"
+                             BorderBrush="#4B5563"
+                             FontSize="11"
+                             SelectionMode="Single"/>
+                </StackPanel>
+
+                <!-- Usage history -->
+                <StackPanel Margin="0,0,0,8">
+                    <TextBlock Text="Usage History" FontSize="11" FontWeight="SemiBold"
+                               Foreground="#9CA3AF" Margin="0,0,0,2"/>
+                    <ListBox x:Name="UsageHistoryListBox"
+                             Height="100"
+                             Background="#111827"
+                             Foreground="#D1D5DB"
+                             BorderBrush="#4B5563"
+                             FontSize="11"
+                             SelectionMode="Single"/>
+                </StackPanel>
+
                 <!-- Mode restrictions -->
                 <StackPanel Margin="0,0,0,8">
                     <TextBlock Text="Mode Tools" FontSize="11" FontWeight="SemiBold"
@@ -175,6 +201,92 @@
                                    TextWrapping="Wrap"/>
                     </Border>
                 </StackPanel>
+
+                <!-- AI skills -->
+                <StackPanel Margin="0,0,0,8">
+                    <TextBlock Text="AI Skills" FontSize="11" FontWeight="SemiBold"
+                               Foreground="#9CA3AF" Margin="0,0,0,2"/>
+                    <ListBox x:Name="SkillsListBox"
+                             Height="110"
+                             Background="#111827"
+                             Foreground="#D1D5DB"
+                             BorderBrush="#4B5563"
+                             FontSize="11"
+                             SelectionMode="Single"
+                             DisplayMemberPath="Name" />
+                    <Button x:Name="RunSkillButton"
+                            Content="Run Skill"
+                            Width="90"
+                            Height="24"
+                            Margin="0,4,0,0"
+                            Background="#0E639C"
+                            Foreground="White"
+                            BorderThickness="0"
+                            FontSize="11"
+                            Cursor="Hand"
+                            Click="RunSkillButton_Click"/>
+                </StackPanel>
+
+                <!-- MCP Marketplace -->
+                <Border Margin="0,0,0,8" Background="#1F2937" BorderBrush="#374151" BorderThickness="1" CornerRadius="3">
+                    <StackPanel Margin="0" Background="Transparent">
+                        <TextBlock Text="MCP Marketplace" FontSize="11" FontWeight="SemiBold"
+                                   Foreground="#E5E7EB" Margin="0,0,0,4"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4" VerticalAlignment="Center">
+                            <TextBox x:Name="McpSearchBox"
+                                     Width="200"
+                                     Height="22"
+                                     Margin="0,0,6,0"
+                                     FontSize="11"
+                                     Background="#111827"
+                                     Foreground="#D1D5DB"
+                                     BorderBrush="#4B5563"
+                                     TextChanged="McpSearchBox_TextChanged"
+                                     ToolTip="Search by ID/Name/type"/>
+                            <TextBox x:Name="McpInventoryUrlBox"
+                                     Width="260"
+                                     Height="22"
+                                     Margin="0,0,6,0"
+                                     FontSize="11"
+                                     Background="#111827"
+                                     Foreground="#D1D5DB"
+                                     BorderBrush="#4B5563"
+                                     Text="https://example.com/mcp-inventory.json"
+                                     ToolTip="Remote inventory URL"/>
+                            <Button x:Name="McpRefreshButton" Content="Fetch Remote" Width="92" Height="24" Margin="0,0,4,0" Click="McpRefreshButton_Click"/>
+                        </StackPanel>
+
+                        <ListBox x:Name="McpServersListBox"
+                                 Height="140"
+                                 Background="#111827"
+                                 Foreground="#D1D5DB"
+                                 BorderBrush="#4B5563"
+                                 SelectionMode="Single"
+                                 DisplayMemberPath="Name"
+                                 SelectionChanged="McpServersListBox_SelectionChanged"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <Button x:Name="McpToggleButton" Content="Enable/Disable" Width="100" Height="24" Margin="0,0,4,0" Click="McpToggleServer_Click"/>
+                            <Button x:Name="McpRestartButton" Content="Restart" Width="70" Height="24" Margin="0,0,4,0" Click="McpRestartServer_Click"/>
+                            <Button x:Name="McpInstallButton" Content="Install" Width="70" Height="24" Margin="0,0,4,0" Click="McpInstallServer_Click"/>
+                            <Button x:Name="McpDiffPatchButton" Content="Diff/Patch" Width="80" Height="24" Margin="0,0,4,0" Click="McpDiffPatchButton_Click"/>
+                            <Button x:Name="McpAutoModeButton" Content="Use Optimizer Mode" Width="120" Height="24" Click="McpAutoModeButton_Click"/>
+                        </StackPanel>
+
+                        <TextBlock x:Name="McpServerScoreText" Text="Score: n/a" Foreground="#9CA3AF" FontSize="10" Margin="0,4,0,0" />
+                        <TextBlock x:Name="McpServerTagsText" Text="Tags: n/a" Foreground="#9CA3AF" FontSize="10" Margin="0,2,0,0" />
+                        <TextBlock x:Name="McpServerDocsText" Text="Docs: n/a" Foreground="#9CA3AF" FontSize="10" Margin="0,2,0,0" TextWrapping="Wrap"/>
+
+                        <TextBlock Text="Health Log" FontSize="11" FontWeight="SemiBold" Foreground="#E5E7EB" Margin="0,6,0,2"/>
+                        <ListBox x:Name="McpHealthLogListBox"
+                                 Height="80"
+                                 Background="#111827"
+                                 Foreground="#F9FAFB"
+                                 BorderBrush="#4B5563"
+                                 FontSize="10"
+                                 IsHitTestVisible="False"/>
+                    </StackPanel>
+                </Border>
 
                 <!-- Prompt -->
                 <StackPanel Margin="0,0,0,8">
@@ -276,6 +388,12 @@
                                                 <TextBlock Text="{Binding StatusIcon}"
                                                            Foreground="{Binding StatusColour}"
                                                            FontSize="11" Margin="0,0,6,0"/>
+                                                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                          VerticalAlignment="Center"
+                                                          Margin="0,0,4,0"
+                                                          ToolTip="Select for batch apply"
+                                                          Checked="DiffItemSelectionChanged"
+                                                          Unchecked="DiffItemSelectionChanged" />
                                                 <TextBlock Text="{Binding FilePath}"
                                                            Foreground="#CCCCCC" FontSize="11"/>
                                                 <TextBlock Text="{Binding AdditionsSummary}"
@@ -286,17 +404,40 @@
                                                            Margin="4,0,0,0"/>
                                             </StackPanel>
                                         </Expander.Header>
-                                        <Border Background="#1A1A1A" Padding="6,4">
-                                            <TextBox Text="{Binding DiffText}"
-                                                     IsReadOnly="True"
-                                                     TextWrapping="Wrap"
-                                                     VerticalScrollBarVisibility="Auto"
-                                                     FontFamily="Consolas" FontSize="10"
-                                                     Background="Transparent"
-                                                     Foreground="#D4D4D4"
-                                                     BorderThickness="0"
-                                                     MaxHeight="200"/>
-                                        </Border>
+                                        <StackPanel>
+                                            <Border Background="#1A1A1A" Padding="6,4">
+                                                <TextBox Text="{Binding DiffText}"
+                                                         IsReadOnly="True"
+                                                         TextWrapping="Wrap"
+                                                         VerticalScrollBarVisibility="Auto"
+                                                         FontFamily="Consolas" FontSize="10"
+                                                         Background="Transparent"
+                                                         Foreground="#D4D4D4"
+                                                         BorderThickness="0"
+                                                         MaxHeight="200"/>
+                                            </Border>
+
+                                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                                <Button Content="Apply"
+                                                        Width="70" Height="24"
+                                                        Margin="0,0,6,0"
+                                                        FontSize="10"
+                                                        Background="#0E639C"
+                                                        Foreground="White"
+                                                        BorderThickness="0"
+                                                        Cursor="Hand"
+                                                        Click="ApplyFileDiffButton_Click"
+                                                        Tag="{Binding}"/>
+                                                <Button Content="Open File" Width="70" Height="24"
+                                                        FontSize="10"
+                                                        Background="#3C3C3C"
+                                                        Foreground="#CCCCCC"
+                                                        BorderThickness="0"
+                                                        Cursor="Hand"
+                                                        Click="OpenFileFromDiff_Click"
+                                                        Tag="{Binding}"/>
+                                            </StackPanel>
+                                        </StackPanel>
                                     </Expander>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
@@ -304,6 +445,19 @@
 
                         <!-- Apply all -->
                         <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <Button x:Name="ApplySelectedDiffsButton"
+                                    Content="Apply Selected"
+                                    Width="110" Height="26"
+                                    IsEnabled="False"
+                                    Background="#0E639C" Foreground="White"
+                                    BorderThickness="0" FontSize="11" Cursor="Hand"
+                                    Click="ApplySelectedDiffsButton_Click"/>
+                            <Button x:Name="PreviewSelectedDiffsButton"
+                                    Content="Preview Selected"
+                                    Width="120" Height="26" Margin="6,0,0,0"
+                                    Background="#3C3C3C" Foreground="#CCCCCC"
+                                    BorderThickness="0" FontSize="11" Cursor="Hand"
+                                    Click="PreviewSelectedDiffsButton_Click"/>
                             <Button x:Name="ApplyAllDiffsButton"
                                     Content="Apply All Changes"
                                     Width="140" Height="26"
@@ -338,6 +492,8 @@
                                   Checked="MockModeToggle_Changed" Unchecked="MockModeToggle_Changed"/>
                     </StackPanel>
                 </Border>
+
+                <TextBlock x:Name="PerformanceStatsText" Text="Perf: not measured" FontSize="10" Foreground="#93C5FD" Margin="0,4,0,0" />
 
             </StackPanel>
         </ScrollViewer>
@@ -383,15 +539,37 @@
                         Click="ClearButton_Click"
                         AutomationProperties.Name="Clear button"/>
 
-                <Button x:Name="AskButton"
-                        Grid.Column="2"
-                        Content="Ask Kilo ▶"
-                        Width="90" Height="26"
-                        Background="#0E639C" Foreground="White"
-                        BorderThickness="0" FontSize="11" FontWeight="SemiBold"
-                        Cursor="Hand"
-                        Click="AskButton_Click"
-                        AutomationProperties.Name="Ask Kilo button"/>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="AnalyzeFileButton"
+                            Content="Analyze"
+                            Width="70" Height="26"
+                            Margin="0,0,4,0"
+                            Background="#3C3C3C" Foreground="#CCCCCC"
+                            BorderThickness="0" FontSize="11" Cursor="Hand"
+                            Click="AnalyzeFileButton_Click"/>
+                    <Button x:Name="ShareSessionButton"
+                            Content="Share"
+                            Width="70" Height="26"
+                            Margin="0,0,4,0"
+                            Background="#3C3C3C" Foreground="#CCCCCC"
+                            BorderThickness="0" FontSize="11" Cursor="Hand"
+                            Click="ShareSessionButton_Click"/>
+                    <Button x:Name="RefreshPerfButton"
+                            Content="Perf"
+                            Width="55" Height="26"
+                            Margin="0,0,4,0"
+                            Background="#3C3C3C" Foreground="#CCCCCC"
+                            BorderThickness="0" FontSize="11" Cursor="Hand"
+                            Click="RefreshPerfButton_Click"/>
+                    <Button x:Name="AskButton"
+                            Content="Ask Kilo ▶"
+                            Width="90" Height="26"
+                            Background="#0E639C" Foreground="White"
+                            BorderThickness="0" FontSize="11" FontWeight="SemiBold"
+                            Cursor="Hand"
+                            Click="AskButton_Click"
+                            AutomationProperties.Name="Ask Kilo button"/>
+                </StackPanel>
             </Grid>
         </Border>
     </Grid>

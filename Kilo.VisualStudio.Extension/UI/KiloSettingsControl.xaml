@@ -26,25 +26,34 @@
                 <Border Background="#252526" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,12">
                     <StackPanel>
                         <TextBlock Text="Profile" FontSize="11" Foreground="#9CA3AF" Margin="0,0,0,4"/>
-                        <ComboBox x:Name="ProfileComboBox" Background="#2D2D2D" Foreground="#CCCCCC" BorderBrush="#555" Height="26">
+                        <ComboBox x:Name="ProfileComboBox" Background="#2D2D2D" Foreground="#CCCCCC" BorderBrush="#555" Height="26" SelectionChanged="ProfileComboBox_SelectionChanged">
                             <ComboBoxItem Content="Default" IsSelected="True"/>
                             <ComboBoxItem Content="Architect"/>
                             <ComboBoxItem Content="Coder"/>
                             <ComboBoxItem Content="Debugger"/>
+                            <ComboBoxItem Content="Reviewer"/>
+                            <ComboBoxItem Content="Optimizer"/>
                         </ComboBox>
                     </StackPanel>
                 </Border>
 
-                <!-- Model Section -->
-                <TextBlock Text="Model" FontSize="12" FontWeight="SemiBold" Foreground="#EEEEEE" Margin="0,0,0,8"/>
+                <!-- Provider/Model Section -->
+                <TextBlock Text="Provider / Model" FontSize="12" FontWeight="SemiBold" Foreground="#EEEEEE" Margin="0,0,0,8"/>
                 <Border Background="#252526" BorderBrush="#3C3C3C" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,12">
                     <StackPanel>
-                        <TextBlock Text="Provider / Model" FontSize="11" Foreground="#9CA3AF" Margin="0,0,0,4"/>
+                        <TextBlock Text="Provider" FontSize="11" Foreground="#9CA3AF" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="ProviderComboBox" Background="#2D2D2D" Foreground="#CCCCCC" BorderBrush="#555" Height="26" Margin="0,0,0,8">
+                            <ComboBoxItem Content="OpenAI" IsSelected="True"/>
+                            <ComboBoxItem Content="Anthropic"/>
+                            <ComboBoxItem Content="Google"/>
+                            <ComboBoxItem Content="Local (Ollama)"/>
+                        </ComboBox>
+                        <TextBlock Text="Model" FontSize="11" Foreground="#9CA3AF" Margin="0,0,0,4"/>
                         <ComboBox x:Name="ModelComboBox" Background="#2D2D2D" Foreground="#CCCCCC" BorderBrush="#555" Height="26">
-                            <ComboBoxItem Content="OpenAI: gpt-4o" IsSelected="True"/>
-                            <ComboBoxItem Content="Anthropic: claude-3-5-sonnet"/>
-                            <ComboBoxItem Content="Google: gemini-2.0-flash"/>
-                            <ComboBoxItem Content="OpenAI: gpt-4o-mini"/>
+                            <ComboBoxItem Content="gpt-4o" IsSelected="True"/>
+                            <ComboBoxItem Content="claude-3-5-sonnet"/>
+                            <ComboBoxItem Content="gemini-2.0-flash"/>
+                            <ComboBoxItem Content="gpt-4o-mini"/>
                         </ComboBox>
                     </StackPanel>
                 </Border>
@@ -66,6 +75,8 @@
                     <StackPanel>
                         <CheckBox x:Name="AutoApproveCheckBox" Content="Auto-approve tools by default" Foreground="#CCCCCC" FontSize="11" Margin="0,0,0,8"/>
                         <CheckBox x:Name="AutoScrollCheckBox" Content="Auto-scroll responses" Foreground="#CCCCCC" FontSize="11" IsChecked="True" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="TelemetryConsentCheckBox" Content="Opt in to anonymous telemetry" Foreground="#CCCCCC" FontSize="11" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="SessionShareCheckBox" Content="Enable session sharing" Foreground="#CCCCCC" FontSize="11" IsChecked="True" Margin="0,0,0,8"/>
                         <CheckBox x:Name="SoundCheckBox" Content="Play sounds on completion" Foreground="#CCCCCC" FontSize="11" Margin="0,0,0,8"/>
                         <CheckBox x:Name="NotificationCheckBox" Content="Show notifications" Foreground="#CCCCCC" FontSize="11" IsChecked="True"/>
                     </StackPanel>

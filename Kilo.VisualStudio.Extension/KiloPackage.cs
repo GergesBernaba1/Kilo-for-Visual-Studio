@@ -31,9 +31,15 @@ namespace Kilo.VisualStudio.Extension
     {
         private ExtensionSettings _extensionSettings = ExtensionSettings.Load();
         private readonly KiloLogger _logger = new KiloLogger();
+        private static KiloPackage? _instance;
         private static AutocompleteService? _autocompleteServiceInstance;
         private static AutomationService? _automationServiceInstance;
         private static AgentModeService? _agentModeServiceInstance;
+        public static TelemetryService? TelemetryServiceInstance { get; private set; }
+        public static SkillsSystemService? SkillsSystemServiceInstance { get; private set; }
+        public static PerformanceService? PerformanceServiceInstance { get; private set; }
+        public static CollaborationService? CollaborationServiceInstance { get; private set; }
+        public static RoslynAnalyzerService? RoslynAnalyzerServiceInstance { get; private set; }
 
         // Service layer – either mock or real depending on settings.
         private KiloConnectionService? _connectionService;
@@ -42,8 +48,10 @@ namespace Kilo.VisualStudio.Extension
         private AutocompleteService? _autocompleteService;
         private AutomationService? _automationService;
         private AgentModeService? _agentModeService;
+        private McpHubService? _mcpHubService;
         private VSAutomationExecutor? _vsAutomationExecutor;
 
+        public static KiloPackage? Instance => _instance;
         public static AutocompleteService? AutocompleteServiceInstance => _autocompleteServiceInstance;
         public static AutomationService? AutomationServiceInstance => _automationServiceInstance;
         public static AgentModeService? AgentModeServiceInstance => _agentModeServiceInstance;
@@ -53,13 +61,31 @@ namespace Kilo.VisualStudio.Extension
             await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             _logger.Info("Kilo Extension initializing…");
 
-            // Get DTE service
-            var dte = (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
+            // Get DTE service async (VSSDK analyzer friendly)
+            var dte = await GetServiceAsync(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
 
-            // Wire up debugging events for mode switching
-            dte.Events.DebuggerEvents.OnEnterBreakMode += OnDebuggerEnterBreakMode;
-            dte.Events.DebuggerEvents.OnEnterRunMode += OnDebuggerEnterRunMode;
-            // dte.Events.DebuggerEvents.OnExceptionThrown += OnDebuggerExceptionThrown;
+            if (dte != null)
+            {
+                // Wire up debugging events for mode switching
+                dte.Events.DebuggerEvents.OnEnterBreakMode += OnDebuggerEnterBreakMode;
+                dte.Events.DebuggerEvents.OnEnterRunMode += OnDebuggerEnterRunMode;
+                // dte.Events.DebuggerEvents.OnExceptionThrown += OnDebuggerExceptionThrown;
+            }
+
+            _instance = this;
+
+            var workspaceRoot = GetWorkspaceDirectory();
+            TelemetryServiceInstance = new TelemetryService(workspaceRoot);
+            SkillsSystemServiceInstance = new SkillsSystemService(workspaceRoot);
+            PerformanceServiceInstance = new PerformanceService();
+            CollaborationServiceInstance = new CollaborationService(workspaceRoot);
+            RoslynAnalyzerServiceInstance = new RoslynAnalyzerService(workspaceRoot);
+
+            if (_extensionSettings.EnableTelemetry)
+            {
+                TelemetryServiceInstance.SetUserConsent(true);
+                TelemetryServiceInstance.SetTelemetryEnabled(true);
+            }
 
             if (_extensionSettings.UseMockBackend)
             {
@@ -77,6 +103,7 @@ namespace Kilo.VisualStudio.Extension
                     _extensionSettings.Save();
                 });
                 _agentModeService.SetCurrentModeFromSettings(_extensionSettings.Profile);
+                _mcpHubService = new McpHubService(GetWorkspaceDirectory());
                 _agentModeServiceInstance = _agentModeService;
             }
             else
@@ -110,6 +137,7 @@ namespace Kilo.VisualStudio.Extension
                     _extensionSettings.Save();
                 });
                 _agentModeService.SetCurrentModeFromSettings(_extensionSettings.Profile);
+                _mcpHubService = new McpHubService(GetWorkspaceDirectory());
                 _agentModeServiceInstance = _agentModeService;
 
                 // Start connection eagerly so the UI shows its state quickly.
@@ -148,12 +176,26 @@ namespace Kilo.VisualStudio.Extension
         {
             _logger.Info($"Kilo connection state → {state}");
             BroadcastToToolWindow(control => control.UpdateConnectionState(state));
+
+            if (TelemetryServiceInstance != null && _extensionSettings.EnableTelemetry)
+            {
+                _ = TelemetryServiceInstance.LogFeatureUsageAsync($"connection_{state.ToString().ToLowerInvariant()}");
+            }
         }
 
         private void OnSessionEvent(object? sender, KiloSessionEvent e)
         {
             // Forward SSE events to the visible tool window.
             BroadcastToToolWindow(control => control.HandleSessionEvent(e));
+
+            if (TelemetryServiceInstance != null && _extensionSettings.EnableTelemetry)
+            {
+                _ = TelemetryServiceInstance.LogEventAsync("session_event", new Dictionary<string, string>
+                {
+                    { "kind", e.Kind.ToString() },
+                    { "sessionId", e.SessionId ?? string.Empty }
+                });
+            }
         }
 
         private void BroadcastToToolWindow(Action<KiloAssistantToolWindowControl> action)
@@ -179,6 +221,8 @@ namespace Kilo.VisualStudio.Extension
             control.ReconnectRequested += OnReconnectRequested;
             control.ApplyDiffsRequested -= OnApplyDiffsRequested;
             control.ApplyDiffsRequested += OnApplyDiffsRequested;
+            control.OpenFileRequested -= OnOpenFileRequested;
+            control.OpenFileRequested += OnOpenFileRequested;
             control.DeleteSessionRequested -= OnDeleteSessionRequested;
             control.DeleteSessionRequested += OnDeleteSessionRequested;
         }
@@ -242,6 +286,21 @@ namespace Kilo.VisualStudio.Extension
             var workspaceRoot = GetWorkspaceDirectorySafe();
             _ = _connectionService.Adapter
                     .DeleteSessionAsync(sessionId, workspaceRoot, CancellationToken.None);
+        }
+
+        private void OnOpenFileRequested(object? sender, string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath)) return;
+
+            try
+            {
+                var host = new VsDiffEditorHost(this);
+                host.OpenDocument(filePath);
+            }
+            catch (Exception ex)
+            {
+                _logger?.Warning("Unable to open requested file from diff view: " + ex.Message);
+            }
         }
 
         private string GetWorkspaceDirectorySafe()
@@ -319,8 +378,17 @@ namespace Kilo.VisualStudio.Extension
             if (window is KiloAssistantToolWindowPane pane &&
                 pane.Content is KiloAssistantToolWindowControl control)
             {
-                if (_assistantService != null)
-                    control.Initialize(_assistantService, _extensionSettings);
+                if (_assistantService != null && _mcpHubService != null)
+                    control.Initialize(
+                        _assistantService,
+                        _extensionSettings,
+                        _mcpHubService,
+                        GetWorkspaceDirectorySafe(),
+                        TelemetryServiceInstance!,
+                        PerformanceServiceInstance!,
+                        CollaborationServiceInstance!,
+                        RoslynAnalyzerServiceInstance!,
+                        SkillsSystemServiceInstance!);
 
                 WireControlEvents(control);
 
@@ -540,6 +608,24 @@ namespace Kilo.VisualStudio.Extension
             }
             catch { }
             return string.Empty;
+        }
+
+        public void ReplaceActiveSelection(string newText)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+            try
+            {
+                if (GetService(typeof(SDTE)) is EnvDTE.DTE dte &&
+                    dte.ActiveDocument?.Selection is EnvDTE.TextSelection sel)
+                {
+                    sel.Delete();
+                    sel.Insert(newText);
+                }
+            }
+            catch
+            {
+                // ignore
+            }
         }
 
         private string GetExtensionDirectory()

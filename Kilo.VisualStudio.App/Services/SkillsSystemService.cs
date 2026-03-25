@@ -154,6 +154,33 @@ namespace Kilo.VisualStudio.App.Services
                     Triggers = new List<string> { "debug", "fix", "error", "bug" },
                     PromptTemplate = "Analyze this code and help identify and fix the bug:\n\n{input}",
                     IsEnabled = true
+                },
+                new SkillDefinition
+                {
+                    Id = Guid.NewGuid().ToString("N"),
+                    Name = "Debug .NET app",
+                    Description = "Diagnose .NET crashes and exceptions",
+                    Triggers = new List<string> { "dotnet", "debug .net", "exception" },
+                    PromptTemplate = "Analyze the following .NET code and suggest debugging steps for crashes and exceptions:\n\n{input}",
+                    IsEnabled = true
+                },
+                new SkillDefinition
+                {
+                    Id = Guid.NewGuid().ToString("N"),
+                    Name = "Optimize SQL query",
+                    Description = "Suggest SQL query improvements for performance",
+                    Triggers = new List<string> { "sql", "query", "performance" },
+                    PromptTemplate = "Analyze this SQL query and provide optimized alternative with explanation:\n\n{input}",
+                    IsEnabled = true
+                },
+                new SkillDefinition
+                {
+                    Id = Guid.NewGuid().ToString("N"),
+                    Name = "Profile performance",
+                    Description = "Suggest improvements based on performance metrics",
+                    Triggers = new List<string> { "profile", "performance", "slow" },
+                    PromptTemplate = "Given these performance metrics, suggest improvements and identify bottlenecks:\n\n{input}",
+                    IsEnabled = true
                 }
             };
         }
