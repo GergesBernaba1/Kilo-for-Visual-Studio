@@ -31,9 +31,11 @@ namespace Kilo.VisualStudio.Integration
 
         private readonly KiloServerManager _serverManager;
         private readonly KiloProtocolSessionHostAdapter _adapter;
-        private readonly HttpClient _httpClient;
         private readonly object _connectGate = new object();
         private readonly string _extensionDirectory;
+
+        // Shared HttpClient to avoid TCP port exhaustion from per-instance creation.
+        private static readonly HttpClient SharedHttpClient = new HttpClient();
 
         private Task? _connectTask;
         private KiloConnectionState _state = KiloConnectionState.Disconnected;
@@ -53,9 +55,8 @@ namespace Kilo.VisualStudio.Integration
         public KiloConnectionService(string extensionDirectory)
         {
             _extensionDirectory = extensionDirectory ?? throw new ArgumentNullException(nameof(extensionDirectory));
-            _httpClient = new HttpClient();
             _serverManager = new KiloServerManager(_extensionDirectory);
-            _adapter = new KiloProtocolSessionHostAdapter(_httpClient);
+            _adapter = new KiloProtocolSessionHostAdapter(SharedHttpClient);
 
             // Bubble all SSE events from the adapter to our subscribers.
             _adapter.SessionEventReceived += OnAdapterEvent;
@@ -114,9 +115,27 @@ namespace Kilo.VisualStudio.Integration
             _adapter.SessionEventReceived -= OnAdapterEvent;
             _serverManager.ServerDied -= OnServerDied;
 
-            _adapter.DisconnectAsync(CancellationToken.None).GetAwaiter().GetResult();
+            // Use a timeout-bounded wait to avoid freezing VS on extension unload.
+            // Do NOT use .GetAwaiter().GetResult() — it can deadlock if a sync context is active.
+            try
+            {
+                var disconnectTask = _adapter.DisconnectAsync(CancellationToken.None);
+                if (!disconnectTask.Wait(TimeSpan.FromSeconds(3)))
+                {
+                    System.Diagnostics.Debug.WriteLine("Kilo: disconnect timed out after 3s during Dispose.");
+                }
+            }
+            catch (AggregateException ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Kilo: error during disconnect in Dispose: {ex.InnerException?.Message}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Kilo: error during disconnect in Dispose: {ex.Message}");
+            }
+
             _serverManager.Dispose();
-            _httpClient.Dispose();
+            // Do NOT dispose SharedHttpClient — it is static and shared across instances.
         }
 
         // ── Internal ───────────────────────────────────────────────────────────────
@@ -188,14 +207,23 @@ namespace Kilo.VisualStudio.Integration
             });
 
             // Fire-and-forget reconnect after a short delay.
+            // Use async continuation to avoid blocking a thread pool thread.
             _ = Task.Delay(ReconnectDelayMs)
-                    .ContinueWith(_ =>
+                    .ContinueWith(async _ =>
                     {
                         if (!_disposed && _state == KiloConnectionState.Disconnected)
                         {
-                            EnsureConnectedAsync(_workspaceDirectory).GetAwaiter().GetResult();
+                            try
+                            {
+                                await EnsureConnectedAsync(_workspaceDirectory);
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"Kilo: reconnect failed: {ex.Message}");
+                                SetState(KiloConnectionState.Error);
+                            }
                         }
-                    }, TaskScheduler.Default);
+                    }, TaskScheduler.Default).Unwrap();
         }
     }
 }

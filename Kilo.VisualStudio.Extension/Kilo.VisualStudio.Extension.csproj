@@ -2,22 +2,53 @@
 
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
+    <OutputType>Library</OutputType>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWPF>true</UseWPF>
-    <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    
+    <!-- VSIX specific -->
     <GeneratePkgDefFile>true</GeneratePkgDefFile>
+    <CreatePkgDefFile>true</CreatePkgDefFile>
+    <RegisterWithCodebase>true</RegisterWithCodebase>
     <UseCodebase>true</UseCodebase>
     <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
-    <IncludeDebugSymbolsInVSIXContainer>false</IncludeDebugSymbolsInVSIXContainer>
+    <IncludeDebugSymbolsInVSIXContainer>true</IncludeDebugSymbolsInVSIXContainer>
     <IncludeDebugSymbolsInLocalVSIXDeployment>false</IncludeDebugSymbolsInLocalVSIXDeployment>
+    <CopyBuildOutputToOutputDirectory>true</CopyBuildOutputToOutputDirectory>
+    <CopyOutputSymbolsToOutputDirectory>true</CopyOutputSymbolsToOutputDirectory>
+    
+    <!-- Debug settings -->
+    <StartAction>Program</StartAction>
+    <StartProgram>C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe</StartProgram>
+    <StartArguments>/rootsuffix Exp</StartArguments>
+    
+    <!-- Suppress warnings -->
     <NoWarn>$(NoWarn);VSTHRD010;VSTHRD100;VSTHRD110;VSTHRD001;VSTHRD200;CS8618;CS8604;CS8603</NoWarn>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <StartAction>Program</StartAction>
-    <StartProgram>C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe</StartProgram>
-    <StartArguments>/rootsuffix Exp /log</StartArguments>
-  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.2.32505.173" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.14.2120" />
+    <Reference Include="System.Design" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <VSCTCompile Include="KiloCommands.vsct">
+      <ResourceName>Menus.ctmenu</ResourceName>
+      <SubType>Designer</SubType>
+    </VSCTCompile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="source.extension.vsixmanifest">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Kilo.VisualStudio.Extension.pkgdef">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Kilo.VisualStudio.App\Kilo.VisualStudio.App.csproj" />
@@ -25,14 +56,10 @@
     <ProjectReference Include="..\Kilo.VisualStudio.Integration\Kilo.VisualStudio.Integration.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.2.32505.173" />
-    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.14.2120" PrivateAssets="all" />
-    <Reference Include="System.Design" />
-    <VSCTCompile Include="KiloCommands.vsct">
-      <ResourceName>Menus.ctmenu</ResourceName>
-    </VSCTCompile>
-    <None Include="source.extension.vsixmanifest" />
-  </ItemGroup>
+  <Target Name="PkgdefProjectOutputGroup" DependsOnTargets="Build">
+    <ItemGroup>
+      <PkgdefProjectOutputGroupOutput Include="$(TargetDir)$(AssemblyName).pkgdef" Condition="Exists('$(TargetDir)$(AssemblyName).pkgdef')" />
+    </ItemGroup>
+  </Target>
 
 </Project>

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -21,6 +22,8 @@ using Task = System.Threading.Tasks.Task;
 namespace Kilo.VisualStudio.Extension
 {
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
+    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionExists_string, PackageAutoLoadFlags.BackgroundLoad)]
+    [ProvideAutoLoad(VSConstants.UICONTEXT.NoSolution_string, PackageAutoLoadFlags.BackgroundLoad)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideToolWindow(typeof(KiloAssistantToolWindowPane))]
     [ProvideToolWindow(typeof(KiloDiffViewerWindowPane))]
@@ -32,12 +35,21 @@ namespace Kilo.VisualStudio.Extension
     [Guid(PackageGuids.PackageGuidString)]
     public sealed class KiloPackage : AsyncPackage
     {
+        /// <summary>
+        /// Custom UI context GUID for rule-based autoload (VS2022 17.10+ compatible).
+        /// </summary>
+        public const string KiloUIContextGuidString = "d2e8c4f1-9a3b-4e7d-b5c6-8f1a2d3e4c5b";
         private ExtensionSettings _extensionSettings = ExtensionSettings.Load();
         private readonly KiloLogger _logger = new KiloLogger();
+        private static readonly object DiagnosticLogLock = new object();
+        private static readonly string DiagnosticLogPath = Path.Combine(Path.GetTempPath(), "KiloVS", "kilo-extension.log");
         private static KiloPackage? _instance;
         private static AutocompleteService? _autocompleteServiceInstance;
         private static AutomationService? _automationServiceInstance;
         private static AgentModeService? _agentModeServiceInstance;
+        private static readonly Guid OutputPaneGuid = new Guid("b3c8f1a2-7d4e-4f6b-8a9c-0d1e2f3a4b5c");
+        private static readonly System.Net.Http.HttpClient SharedBackendHttpClient = new System.Net.Http.HttpClient();
+        private IVsOutputWindowPane? _outputPane;
         public static TelemetryService? TelemetryServiceInstance { get; private set; }
         public static SkillsSystemService? SkillsSystemServiceInstance { get; private set; }
         public static PerformanceService? PerformanceServiceInstance { get; private set; }
@@ -58,6 +70,38 @@ namespace Kilo.VisualStudio.Extension
         public static AutocompleteService? AutocompleteServiceInstance => _autocompleteServiceInstance;
         public static AutomationService? AutomationServiceInstance => _automationServiceInstance;
         public static AgentModeService? AgentModeServiceInstance => _agentModeServiceInstance;
+
+        private static void LogExtensionEvent(string method, string message = "", Exception? exception = null)
+        {
+            try
+            {
+                var folder = Path.GetDirectoryName(DiagnosticLogPath);
+                if (!string.IsNullOrEmpty(folder))
+                {
+                    Directory.CreateDirectory(folder);
+                }
+
+                var timestamp = DateTimeOffset.Now.ToString("o");
+                var threadId = Environment.CurrentManagedThreadId;
+                var exceptionText = exception?.ToString() ?? "-";
+                var line = $"{timestamp} | thread={threadId} | method={method} | message={message} | exception={exceptionText}{Environment.NewLine}";
+
+                lock (DiagnosticLogLock)
+                {
+                    File.AppendAllText(DiagnosticLogPath, line);
+                }
+
+                // Also write to VS Output Window pane
+                var shortLine = exception != null
+                    ? $"[Kilo] {method}: {message} — {exception.Message}\n"
+                    : $"[Kilo] {method}: {message}\n";
+                _instance?._outputPane?.OutputStringThreadSafe(shortLine);
+            }
+            catch
+            {
+                // Logging must never break extension behavior.
+            }
+        }
 
         /// <summary>
         /// Gets the full content of the active document file from any context.
@@ -84,6 +128,7 @@ namespace Kilo.VisualStudio.Extension
 
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
+            LogExtensionEvent(nameof(InitializeAsync), "start");
             await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             _logger.Info("Kilo Extension initializing…");
 
@@ -99,6 +144,22 @@ namespace Kilo.VisualStudio.Extension
             }
 
             _instance = this;
+
+            // Initialize VS Output Window pane for integrated logging
+            try
+            {
+                if (await GetServiceAsync(typeof(SVsOutputWindow)) is IVsOutputWindow outputWindow)
+                {
+                    var paneGuid = OutputPaneGuid;
+                    outputWindow.CreatePane(ref paneGuid, "Kilo", 1, 1);
+                    outputWindow.GetPane(ref paneGuid, out _outputPane);
+                    _outputPane?.OutputStringThreadSafe("Kilo Extension initializing…\n");
+                }
+            }
+            catch
+            {
+                // Output pane is non-critical
+            }
 
             var workspaceRoot = GetWorkspaceDirectory();
             TelemetryServiceInstance = new TelemetryService(workspaceRoot);
@@ -146,9 +207,8 @@ namespace Kilo.VisualStudio.Extension
                 _assistantService = new AssistantService(realAdapter,
                     () => _connectionService.ServerInstance?.ToEndpoint() ?? new KiloServerEndpoint(), _agentModeService);
 
-                // Create backend client for autocomplete
-                var httpClient = new System.Net.Http.HttpClient();
-                var backendClient = new KiloBackendClient(httpClient, false)
+                // Use a shared HttpClient to avoid TCP port exhaustion
+                var backendClient = new KiloBackendClient(SharedBackendHttpClient, false)
                 {
                     ApiKey = _extensionSettings.KiloApiKey,
                     BackendUrl = _extensionSettings.BackendUrl
@@ -172,12 +232,16 @@ namespace Kilo.VisualStudio.Extension
                         .ContinueWith(t =>
                         {
                             if (t.IsFaulted)
+                            {
                                 _logger.Error("Kilo connection failed on startup.", t.Exception?.InnerException);
+                                LogExtensionEvent(nameof(InitializeAsync), "connection startup failed", t.Exception?.InnerException);
+                            }
                         }, TaskScheduler.Default);
             }
 
             await RegisterCommands();
             _logger.Info("Kilo Extension initialized.");
+            LogExtensionEvent(nameof(InitializeAsync), "end");
         }
 
         protected override void Dispose(bool disposing)
@@ -200,8 +264,20 @@ namespace Kilo.VisualStudio.Extension
 
         private void OnConnectionStateChanged(object? sender, KiloConnectionState state)
         {
+            LogExtensionEvent(nameof(OnConnectionStateChanged), $"state={state}");
             _logger.Info($"Kilo connection state → {state}");
             BroadcastToToolWindow(control => control.UpdateConnectionState(state));
+
+            // Update VS status bar with connection state
+            var statusText = state switch
+            {
+                KiloConnectionState.Connected => "Kilo: Connected",
+                KiloConnectionState.Connecting => "Kilo: Connecting…",
+                KiloConnectionState.Disconnected => "Kilo: Disconnected",
+                KiloConnectionState.Error => "Kilo: Connection Error",
+                _ => "Kilo: Unknown"
+            };
+            _ = UpdateStatusBarAsync(statusText);
 
             if (TelemetryServiceInstance != null && _extensionSettings.EnableTelemetry)
             {
@@ -226,17 +302,17 @@ namespace Kilo.VisualStudio.Extension
 
         private void BroadcastToToolWindow(Action<KiloAssistantToolWindowControl> action)
         {
-            // Must not block; UI dispatch happens on the captured dispatcher inside the control.
-            System.Windows.Application.Current?.Dispatcher?.BeginInvoke(
-                System.Windows.Threading.DispatcherPriority.Normal,
-                (Action)(() =>
+            // Use JoinableTaskFactory instead of Application.Current?.Dispatcher
+            // which can be null in VS2022 extension contexts.
+            _ = this.JoinableTaskFactory.RunAsync(async () =>
+            {
+                await this.JoinableTaskFactory.SwitchToMainThreadAsync();
+                var window = FindToolWindow(typeof(KiloAssistantToolWindowPane), 0, false);
+                if (window?.Content is KiloAssistantToolWindowControl control)
                 {
-                    var window = FindToolWindow(typeof(KiloAssistantToolWindowPane), 0, false);
-                    if (window?.Content is KiloAssistantToolWindowControl control)
-                    {
-                        action(control);
-                    }
-                }));
+                    action(control);
+                }
+            });
         }
 
         // ── Control event handlers ──────────────────────────────────────────────────
@@ -261,7 +337,10 @@ namespace Kilo.VisualStudio.Extension
                     .ContinueWith(t =>
                     {
                         if (t.IsFaulted)
+                        {
                             _logger.Error("Kilo reconnect failed.", t.Exception?.InnerException);
+                            LogExtensionEvent(nameof(OnReconnectRequested), "reconnect failed", t.Exception?.InnerException);
+                        }
                     }, TaskScheduler.Default);
         }
 
@@ -326,6 +405,7 @@ namespace Kilo.VisualStudio.Extension
             catch (Exception ex)
             {
                 _logger?.Warning("Unable to open requested file from diff view: " + ex.Message);
+                LogExtensionEvent(nameof(OnOpenFileRequested), "open file failed", ex);
             }
         }
 
@@ -347,59 +427,138 @@ namespace Kilo.VisualStudio.Extension
         private async Task RegisterCommands()
         {
             await this.JoinableTaskFactory.SwitchToMainThreadAsync();
+            LogExtensionEvent(nameof(RegisterCommands), "start");
 
             if (await GetServiceAsync(typeof(IMenuCommandService)) is OleMenuCommandService commandService)
             {
-                var packageGuid = new Guid(PackageGuids.PackageGuidString);
+                // Use the dedicated command set GUID (not the package GUID)
+                var cmdSetGuid = new Guid(PackageGuids.CommandSetGuidString);
 
+                // ── Main menu commands ──────────────────────────────────────
                 commandService.AddCommand(new MenuCommand(
                     (s, e) => _ = OpenToolWindow(),
-                    new CommandID(packageGuid, PackageCommandSet.OpenAssistantToolWindow)));
+                    new CommandID(cmdSetGuid, PackageCommandSet.OpenAssistantToolWindow)));
 
                 commandService.AddCommand(new MenuCommand(
                     (s, e) => _ = AskSelection(),
-                    new CommandID(packageGuid, PackageCommandSet.AskSelection)));
+                    new CommandID(cmdSetGuid, PackageCommandSet.AskSelection)));
 
                 commandService.AddCommand(new MenuCommand(
                     (s, e) => _ = AskFile(),
-                    new CommandID(packageGuid, PackageCommandSet.AskFile)));
+                    new CommandID(cmdSetGuid, PackageCommandSet.AskFile)));
 
                 commandService.AddCommand(new MenuCommand(
                     (s, e) => _ = OpenDiffViewerWindow(),
-                    new CommandID(packageGuid, PackageCommandSet.OpenDiffViewer)));
+                    new CommandID(cmdSetGuid, PackageCommandSet.OpenDiffViewer)));
 
                 commandService.AddCommand(new MenuCommand(
                     (s, e) => _ = OpenSessionHistoryWindow(),
-                    new CommandID(packageGuid, PackageCommandSet.OpenSessionHistory)));
+                    new CommandID(cmdSetGuid, PackageCommandSet.OpenSessionHistory)));
 
                 commandService.AddCommand(new MenuCommand(
                     (s, e) => _ = OpenSettingsWindow(),
-                    new CommandID(packageGuid, PackageCommandSet.OpenSettings)));
+                    new CommandID(cmdSetGuid, PackageCommandSet.OpenSettings)));
 
                 commandService.AddCommand(new MenuCommand(
                     (s, e) => _ = CycleAgentMode(),
-                    new CommandID(packageGuid, PackageCommandSet.CycleAgentMode)));
+                    new CommandID(cmdSetGuid, PackageCommandSet.CycleAgentMode)));
 
                 commandService.AddCommand(new MenuCommand(
                     (s, e) => _ = NewSession(),
-                    new CommandID(packageGuid, PackageCommandSet.NewSession)));
+                    new CommandID(cmdSetGuid, PackageCommandSet.NewSession)));
 
                 commandService.AddCommand(new MenuCommand(
                     (s, e) => _ = OpenAutomationWindow(),
-                    new CommandID(packageGuid, PackageCommandSet.OpenAutomationToolWindow)));
+                    new CommandID(cmdSetGuid, PackageCommandSet.OpenAutomationToolWindow)));
 
                 commandService.AddCommand(new MenuCommand(
                     (s, e) => _ = ShowAgentManagerWindow(),
-                    new CommandID(packageGuid, PackageCommandSet.OpenAgentManager)));
+                    new CommandID(cmdSetGuid, PackageCommandSet.OpenAgentManager)));
 
                 commandService.AddCommand(new MenuCommand(
                     (s, e) => _ = ShowSubAgentViewer(),
-                    new CommandID(packageGuid, PackageCommandSet.OpenSubAgentViewer)));
+                    new CommandID(cmdSetGuid, PackageCommandSet.OpenSubAgentViewer)));
+
+                commandService.AddCommand(new MenuCommand(
+                    (s, e) => OpenExtensionLogFile(),
+                    new CommandID(cmdSetGuid, PackageCommandSet.OpenExtensionLog)));
+
+                // ── Editor context menu commands ────────────────────────────
+                commandService.AddCommand(new MenuCommand(
+                    (s, e) => _ = AskSelection(),
+                    new CommandID(cmdSetGuid, PackageCommandSet.AskSelectionContext)));
+
+                commandService.AddCommand(new MenuCommand(
+                    (s, e) => _ = AskFile(),
+                    new CommandID(cmdSetGuid, PackageCommandSet.AskFileContext)));
+
+                // ── Solution Explorer context menu command ──────────────────
+                commandService.AddCommand(new MenuCommand(
+                    (s, e) => _ = AskFile(),
+                    new CommandID(cmdSetGuid, PackageCommandSet.AskFileSolutionExplorer)));
+
+                // ── Tools menu fallback command ─────────────────────────────
+                commandService.AddCommand(new MenuCommand(
+                    (s, e) => _ = OpenToolWindow(),
+                    new CommandID(cmdSetGuid, PackageCommandSet.OpenAssistantTools)));
+
+                LogExtensionEvent(nameof(RegisterCommands), "success");
+            }
+
+            // ── Status bar ─────────────────────────────────────────────────
+            await UpdateStatusBarAsync("Kilo: Ready");
+        }
+
+        private async Task UpdateStatusBarAsync(string text)
+        {
+            await this.JoinableTaskFactory.SwitchToMainThreadAsync();
+            try
+            {
+                if (await GetServiceAsync(typeof(SVsStatusbar)) is IVsStatusbar statusBar)
+                {
+                    statusBar.SetText(text);
+                }
+            }
+            catch
+            {
+                // Status bar not critical
+            }
+        }
+
+        private void OpenExtensionLogFile()
+        {
+            LogExtensionEvent(nameof(OpenExtensionLogFile), "entered");
+            try
+            {
+                var folder = Path.GetDirectoryName(DiagnosticLogPath);
+                if (!string.IsNullOrEmpty(folder))
+                {
+                    Directory.CreateDirectory(folder);
+                }
+
+                if (!File.Exists(DiagnosticLogPath))
+                {
+                    File.AppendAllText(DiagnosticLogPath, string.Empty);
+                }
+
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = DiagnosticLogPath,
+                    UseShellExecute = true
+                };
+
+                Process.Start(startInfo);
+            }
+            catch (Exception ex)
+            {
+                LogExtensionEvent(nameof(OpenExtensionLogFile), "open log failed", ex);
+                _logger.Warning("Failed to open Kilo extension log: " + ex.Message);
             }
         }
 
         private async Task OpenToolWindow()
         {
+            LogExtensionEvent(nameof(OpenToolWindow), "entered");
             await this.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             var window = FindToolWindow(typeof(KiloAssistantToolWindowPane), 0, true);
@@ -436,6 +595,7 @@ namespace Kilo.VisualStudio.Extension
 
         private async Task AskSelection()
         {
+            LogExtensionEvent(nameof(AskSelection), "entered");
             await OpenToolWindow();
 
             var window = FindToolWindow(typeof(KiloAssistantToolWindowPane), 0, false);
@@ -452,6 +612,7 @@ namespace Kilo.VisualStudio.Extension
 
         private async Task AskFile()
         {
+            LogExtensionEvent(nameof(AskFile), "entered");
             await OpenToolWindow();
 
             var window = FindToolWindow(typeof(KiloAssistantToolWindowPane), 0, false);
@@ -465,6 +626,7 @@ namespace Kilo.VisualStudio.Extension
 
         private async Task OpenDiffViewerWindow()
         {
+            LogExtensionEvent(nameof(OpenDiffViewerWindow), "entered");
             await this.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             var window = FindToolWindow(typeof(KiloDiffViewerWindowPane), 0, true);
@@ -477,6 +639,7 @@ namespace Kilo.VisualStudio.Extension
 
         private async Task OpenSessionHistoryWindow()
         {
+            LogExtensionEvent(nameof(OpenSessionHistoryWindow), "entered");
             await this.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             var window = FindToolWindow(typeof(KiloSessionHistoryWindowPane), 0, true);
@@ -489,6 +652,7 @@ namespace Kilo.VisualStudio.Extension
 
         private async Task OpenSettingsWindow()
         {
+            LogExtensionEvent(nameof(OpenSettingsWindow), "entered");
             await this.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             var window = FindToolWindow(typeof(KiloSettingsWindowPane), 0, true);
@@ -501,6 +665,7 @@ namespace Kilo.VisualStudio.Extension
 
         private async Task OpenAutomationWindow()
         {
+            LogExtensionEvent(nameof(OpenAutomationWindow), "entered");
             await this.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             var window = FindToolWindow(typeof(KiloAutomationToolWindowPane), 0, true);
@@ -513,6 +678,7 @@ namespace Kilo.VisualStudio.Extension
 
         private async Task ShowAgentManagerWindow()
         {
+            LogExtensionEvent(nameof(ShowAgentManagerWindow), "entered");
             await this.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             var window = FindToolWindow(typeof(KiloAgentManagerWindowPane), 0, true);
@@ -525,6 +691,7 @@ namespace Kilo.VisualStudio.Extension
 
         private async Task ShowSubAgentViewer()
         {
+            LogExtensionEvent(nameof(ShowSubAgentViewer), "entered");
             await this.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             var window = FindToolWindow(typeof(KiloSubAgentViewerWindowPane), 0, true);
@@ -537,6 +704,7 @@ namespace Kilo.VisualStudio.Extension
 
         private async Task CycleAgentMode()
         {
+            LogExtensionEvent(nameof(CycleAgentMode), "entered");
             await OpenToolWindow();
 
             var window = FindToolWindow(typeof(KiloAssistantToolWindowPane), 0, false);
@@ -548,6 +716,7 @@ namespace Kilo.VisualStudio.Extension
 
         private async Task NewSession()
         {
+            LogExtensionEvent(nameof(NewSession), "entered");
             await OpenToolWindow();
 
             var window = FindToolWindow(typeof(KiloAssistantToolWindowPane), 0, false);

@@ -1,0 +1,269 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         Kilo Copilot-Inspired Theme
+         GitHub Copilot aesthetic with smooth animations and modern design
+    ═══════════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Color Palette (inspired by GitHub Copilot) -->
+    <Color x:Key="CopilotPurple">#6E40C9</Color>
+    <Color x:Key="CopilotPurpleDark">#5B33A6</Color>
+    <Color x:Key="CopilotBlue">#0969DA</Color>
+    <Color x:Key="CopilotGreen">#1F883D</Color>
+    <Color x:Key="CopilotOrange">#BF8700</Color>
+    <Color x:Key="CopilotRed">#CF222E</Color>
+    
+    <!-- Background Colors -->
+    <SolidColorBrush x:Key="PanelBackground" Color="#1E1E1E"/>
+    <SolidColorBrush x:Key="PanelBackgroundLight" Color="#252526"/>
+    <SolidColorBrush x:Key="PanelBackgroundHover" Color="#2D2D30"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="#3C3C3C"/>
+    
+    <!-- Text Colors -->
+    <SolidColorBrush x:Key="TextPrimary" Color="#EEEEEE"/>
+    <SolidColorBrush x:Key="TextSecondary" Color="#9CA3AF"/>
+    <SolidColorBrush x:Key="TextTertiary" Color="#6B7280"/>
+    
+    <!-- Accent Colors -->
+    <SolidColorBrush x:Key="AccentPurple" Color="{StaticResource CopilotPurple}"/>
+    <SolidColorBrush x:Key="AccentPurpleDark" Color="{StaticResource CopilotPurpleDark}"/>
+    <SolidColorBrush x:Key="AccentBlue" Color="{StaticResource CopilotBlue}"/>
+    <SolidColorBrush x:Key="AccentGreen" Color="{StaticResource CopilotGreen}"/>
+    
+    <!-- Status Colors -->
+    <SolidColorBrush x:Key="StatusSuccess" Color="#22C55E"/>
+    <SolidColorBrush x:Key="StatusWarning" Color="#EAB308"/>
+    <SolidColorBrush x:Key="StatusError" Color="#EF4444"/>
+    <SolidColorBrush x:Key="StatusInfo" Color="#3B82F6"/>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         Animated Button Style (Copilot-inspired)
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <Style x:Key="CopilotButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource AccentPurple}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Border"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="6"
+                            Padding="{TemplateBinding Padding}">
+                        <Border.Effect>
+                            <DropShadowEffect x:Name="Shadow" 
+                                            Color="{StaticResource CopilotPurple}" 
+                                            BlurRadius="12" 
+                                            ShadowDepth="0" 
+                                            Opacity="0"/>
+                        </Border.Effect>
+                        <ContentPresenter HorizontalAlignment="Center" 
+                                        VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ColorAnimation Storyboard.TargetName="Border"
+                                                      Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                      To="{StaticResource CopilotPurpleDark}"
+                                                      Duration="0:0:0.2">
+                                            <ColorAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut"/>
+                                            </ColorAnimation.EasingFunction>
+                                        </ColorAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="Shadow"
+                                                       Storyboard.TargetProperty="Opacity"
+                                                       To="0.4"
+                                                       Duration="0:0:0.2">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ColorAnimation Storyboard.TargetName="Border"
+                                                      Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                      To="{StaticResource CopilotPurple}"
+                                                      Duration="0:0:0.2">
+                                            <ColorAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut"/>
+                                            </ColorAnimation.EasingFunction>
+                                        </ColorAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="Shadow"
+                                                       Storyboard.TargetProperty="Opacity"
+                                                       To="0"
+                                                       Duration="0:0:0.2">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Border" Property="RenderTransform">
+                                <Setter.Value>
+                                    <ScaleTransform ScaleX="0.96" ScaleY="0.96"/>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter TargetName="Border" Property="RenderTransformOrigin" Value="0.5,0.5"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         Animated TextBox Style (Copilot-inspired)
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <Style x:Key="CopilotTextBoxStyle" TargetType="TextBox">
+        <Setter Property="Background" Value="{StaticResource PanelBackgroundLight}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="CaretBrush" Value="{StaticResource AccentPurple}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border x:Name="Border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="6">
+                        <ScrollViewer x:Name="PART_ContentHost"
+                                    Padding="{TemplateBinding Padding}"
+                                    VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsFocused" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ColorAnimation Storyboard.TargetName="Border"
+                                                      Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)"
+                                                      To="{StaticResource CopilotPurple}"
+                                                      Duration="0:0:0.2">
+                                            <ColorAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut"/>
+                                            </ColorAnimation.EasingFunction>
+                                        </ColorAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ColorAnimation Storyboard.TargetName="Border"
+                                                      Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)"
+                                                      To="#3C3C3C"
+                                                      Duration="0:0:0.2">
+                                            <ColorAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut"/>
+                                            </ColorAnimation.EasingFunction>
+                                        </ColorAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         Message Bubble Style (Chat bubbles with animations)
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <Style x:Key="UserMessageBubble" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource AccentPurple}"/>
+        <Setter Property="CornerRadius" Value="12,12,2,12"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="Margin" Value="40,4,12,4"/>
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="MaxWidth" Value="350"/>
+        <Style.Triggers>
+            <EventTrigger RoutedEvent="Loaded">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation From="0" To="1" 
+                                       Duration="0:0:0.3"
+                                       Storyboard.TargetProperty="Opacity">
+                            <DoubleAnimation.EasingFunction>
+                                <CubicEase EasingMode="EaseOut"/>
+                            </DoubleAnimation.EasingFunction>
+                        </DoubleAnimation>
+                        <ThicknessAnimation From="0,20,0,0" To="40,4,12,4"
+                                          Duration="0:0:0.3"
+                                          Storyboard.TargetProperty="Margin">
+                            <ThicknessAnimation.EasingFunction>
+                                <CubicEase EasingMode="EaseOut"/>
+                            </ThicknessAnimation.EasingFunction>
+                        </ThicknessAnimation>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="AssistantMessageBubble" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource PanelBackgroundLight}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="12,12,12,2"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="Margin" Value="12,4,40,4"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="MaxWidth" Value="350"/>
+        <Style.Triggers>
+            <EventTrigger RoutedEvent="Loaded">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation From="0" To="1" 
+                                       Duration="0:0:0.3"
+                                       Storyboard.TargetProperty="Opacity">
+                            <DoubleAnimation.EasingFunction>
+                                <CubicEase EasingMode="EaseOut"/>
+                            </DoubleAnimation.EasingFunction>
+                        </DoubleAnimation>
+                        <ThicknessAnimation From="0,20,0,0" To="12,4,40,4"
+                                          Duration="0:0:0.3"
+                                          Storyboard.TargetProperty="Margin">
+                            <ThicknessAnimation.EasingFunction>
+                                <CubicEase EasingMode="EaseOut"/>
+                            </ThicknessAnimation.EasingFunction>
+                        </ThicknessAnimation>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         Loading Animation (Copilot-style pulsing dots)
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <Style x:Key="LoadingDot" TargetType="Ellipse">
+        <Setter Property="Width" Value="8"/>
+        <Setter Property="Height" Value="8"/>
+        <Setter Property="Fill" Value="{StaticResource AccentPurple}"/>
+        <Setter Property="Margin" Value="2"/>
+    </Style>
+
+</ResourceDictionary>

@@ -2,6 +2,7 @@ namespace Kilo.VisualStudio.Extension
 {
     internal static class PackageCommandSet
     {
+        // Main commands (must match IDSymbol values in KiloCommands.vsct)
         public const int OpenAssistantToolWindow = 0x0100;
         public const int AskSelection = 0x0101;
         public const int AskFile = 0x0102;
@@ -15,6 +16,12 @@ namespace Kilo.VisualStudio.Extension
         public const int OpenAutomationToolWindow = 0x010A;
         public const int OpenAgentManager = 0x010B;
         public const int OpenSubAgentViewer = 0x010C;
-        public const int CommandSetGuid = 0x00000000;
+        public const int OpenExtensionLog = 0x010D;
+
+        // Context menu commands (editor right-click, Solution Explorer right-click)
+        public const int AskSelectionContext = 0x0200;
+        public const int AskFileContext = 0x0201;
+        public const int AskFileSolutionExplorer = 0x0202;
+        public const int OpenAssistantTools = 0x0203;
     }
 }

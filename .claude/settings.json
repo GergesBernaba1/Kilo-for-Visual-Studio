@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(taskkill //F //IM devenv.exe)",
+      "Bash(MSYS_NO_PATHCONV=1 \"C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/VSIXInstaller.exe\" /e /q \"e:/Gerges Files/Kilo-for-Visual-Studio/Kilo.VisualStudio.Vsix/bin/Debug/Kilo.VisualStudio.Vsix.vsix\")",
+      "Bash(python -c ':*)",
+      "Bash(mkdir -p C:/Users/gerges.youssef/AppData/Local/Microsoft/VisualStudio/17.0_b303c3c0Exp/Extensions/GergesBernaba/KiloAssistant/1.0.7)",
+      "Bash(MSYS_NO_PATHCONV=1 \"C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/devenv.exe\" /rootSuffix Exp /setup)",
+      "Bash(echo \"Setup exit: $?\")"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\gerges.youssef\\AppData\\Local\\Microsoft\\VisualStudio\\17.0_b303c3c0Exp\\Extensions\\GergesBernaba\\KiloAssistant\\1.0.7"
+    ]
+  }
+}

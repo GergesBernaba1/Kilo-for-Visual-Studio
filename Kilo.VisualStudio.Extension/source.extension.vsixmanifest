@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="Kilo.VisualStudio.Assistant" Version="1.0.5" Language="en-US" Publisher="Gerges Bernaba" />
+    <Identity Id="Kilo.VisualStudio.Assistant" Version="1.0.7" Language="en-US" Publisher="Gerges Bernaba" />
     <DisplayName>Kilo Visual Studio Assistant</DisplayName>
     <Description xml:space="preserve">Created by Gerges Bernaba. Kilo Visual Studio Assistant is an AI-powered extension for Visual Studio 2022 that helps with intelligent code completion, chat-based coding assistance, and automated development workflows.</Description>
     <MoreInfo>http://kilo.ai/visualstudio</MoreInfo>
-    <Icon>KiloLogo.png</Icon>
     <Tags>AI;Coding;Assistant;Development</Tags>
   </Metadata>
   <Installation InstalledByMsi="false" AllUsers="false" SystemComponent="false" Scope="ProductExtension">
@@ -24,6 +23,7 @@
     <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[17.0,18.0)" DisplayName="Visual Studio core editor" />
   </Prerequisites>
   <Assets>
-    <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="File" Path="Kilo.VisualStudio.Extension.pkgdef" />
+    <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
+    <Asset Type="Microsoft.VisualStudio.MefComponent" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%|" />
   </Assets>
 </PackageManifest>

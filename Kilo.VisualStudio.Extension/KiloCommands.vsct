@@ -1,153 +1,282 @@
 <?xml version="1.0" encoding="utf-8"?>
-<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable">
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable"
+              xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <Extern href="stdidcmd.h" />
   <Extern href="vsshlids.h" />
 
-  <Commands>
-    <CommandPrefix guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0100" />
-    
-    <!-- Main assistant tool window -->
-    <Button guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0100" priority="0x0100" type="Button">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_TOOLS" />
-      <Icon guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0101" />
-      <Strings>
-        <ButtonText>Open Kilo Assistant</ButtonText>
-        <LocCanonicalName>Kilo.OpenAssistant</LocCanonicalName>
-      </Strings>
-      <KeyBindings>
-        <KeyBinding guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0100" key1="K" mod1="Control Shift" />
-      </KeyBindings>
-    </Button>
-    
-    <!-- Ask about selection -->
-    <Button guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0101" priority="0x0101" type="Button">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_EXTENSIONS" />
-      <Icon guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0102" />
-      <Strings>
-        <ButtonText>Ask Kilo About Selection</ButtonText>
-        <LocCanonicalName>Kilo.AskSelection</LocCanonicalName>
-      </Strings>
-      <KeyBindings>
-        <KeyBinding guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0101" key1="A" mod1="Control Shift" />
-      </KeyBindings>
-    </Button>
-    
-    <!-- Ask about file -->
-    <Button guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0102" priority="0x0102" type="Button">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_TOOLS" />
-      <Icon guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0103" />
-      <Strings>
-        <ButtonText>Ask Kilo About Current File</ButtonText>
-        <LocCanonicalName>Kilo.AskFile</LocCanonicalName>
-      </Strings>
-      <KeyBindings>
-        <KeyBinding guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0102" key1="F" mod1="Control Shift" />
-      </KeyBindings>
-    </Button>
-    
-    <!-- Open Diff Viewer -->
-    <Button guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0103" priority="0x0103" type="Button">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_TOOLS" />
-      <Strings>
-        <ButtonText>Open Diff Viewer</ButtonText>
-        <LocCanonicalName>Kilo.OpenDiffViewer</LocCanonicalName>
-      </Strings>
-    </Button>
-    
-    <!-- Open Session History -->
-    <Button guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0104" priority="0x0104" type="Button">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_TOOLS" />
-      <Strings>
-        <ButtonText>Session History</ButtonText>
-        <LocCanonicalName>Kilo.OpenSessionHistory</LocCanonicalName>
-      </Strings>
-      <KeyBindings>
-        <KeyBinding guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0104" key1="H" mod1="Control Shift" />
-      </KeyBindings>
-    </Button>
-    
-    <!-- Open Settings -->
-    <Button guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0105" priority="0x0105" type="Button">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_TOOLS" />
-      <Strings>
-        <ButtonText>Kilo Settings</ButtonText>
-        <LocCanonicalName>Kilo.OpenSettings</LocCanonicalName>
-      </Strings>
-      <KeyBindings>
-        <KeyBinding guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0105" key1="," mod1="Control" />
-      </KeyBindings>
-    </Button>
-    
-    <!-- Cycle Agent Mode -->
-    <Button guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0107" priority="0x0107" type="Button">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_TOOLS" />
-      <Strings>
-        <ButtonText>Cycle Agent Mode</ButtonText>
-        <LocCanonicalName>Kilo.CycleAgentMode</LocCanonicalName>
-      </Strings>
-      <KeyBindings>
-        <KeyBinding guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0107" key1="M" mod1="Control Shift" />
-      </KeyBindings>
-    </Button>
-    
-    <!-- New Session -->
-    <Button guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0109" priority="0x0109" type="Button">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_TOOLS" />
-      <Strings>
-        <ButtonText>New Session</ButtonText>
-        <LocCanonicalName>Kilo.NewSession</LocCanonicalName>
-      </Strings>
-      <KeyBindings>
-        <KeyBinding guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x0109" key1="N" mod1="Control Shift" />
-      </KeyBindings>
-    </Button>
+  <Commands package="guidKiloPackage">
 
-    <!-- Open Automation Tool Window -->
-    <Button guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x010A" priority="0x010A" type="Button">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_TOOLS" />
-      <Strings>
-        <ButtonText>Open Automation</ButtonText>
-        <LocCanonicalName>Kilo.OpenAutomation</LocCanonicalName>
-      </Strings>
-      <KeyBindings>
-        <KeyBinding guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x010A" key1="U" mod1="Control Shift" />
-      </KeyBindings>
-    </Button>
-    
-    <!-- Open Agent Manager -->
-    <Button guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x010B" priority="0x010B" type="Button">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_TOOLS" />
-      <Strings>
-        <ButtonText>Agent Manager</ButtonText>
-        <LocCanonicalName>Kilo.OpenAgentManager</LocCanonicalName>
-      </Strings>
-      <KeyBindings>
-        <KeyBinding guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x010B" key1="A" mod1="Control Shift" />
-      </KeyBindings>
-    </Button>
-    
-    <!-- Open Sub-Agent Viewer -->
-    <Button guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x010C" priority="0x010C" type="Button">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_TOOLS" />
-      <Strings>
-        <ButtonText>Sub-Agent Viewer</ButtonText>
-        <LocCanonicalName>Kilo.OpenSubAgentViewer</LocCanonicalName>
-      </Strings>
-      <KeyBindings>
-        <KeyBinding guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" id="0x010C" key1="S" mod1="Control Shift" />
-      </KeyBindings>
-    </Button>
+    <!-- ── Groups ──────────────────────────────────────────────────────────── -->
+    <Groups>
+      <!-- Top-level "Kilo" menu in the main menu bar -->
+      <Group guid="guidKiloCmdSet" id="KiloTopMenuGroup" priority="0x0600">
+        <Parent guid="guidKiloCmdSet" id="KiloTopMenu" />
+      </Group>
+
+      <!-- Sub-group for assistant/session commands -->
+      <Group guid="guidKiloCmdSet" id="KiloAssistantGroup" priority="0x0100">
+        <Parent guid="guidKiloCmdSet" id="KiloTopMenu" />
+      </Group>
+
+      <!-- Sub-group for tools/viewers -->
+      <Group guid="guidKiloCmdSet" id="KiloToolsGroup" priority="0x0200">
+        <Parent guid="guidKiloCmdSet" id="KiloTopMenu" />
+      </Group>
+
+      <!-- Sub-group for agents -->
+      <Group guid="guidKiloCmdSet" id="KiloAgentsGroup" priority="0x0300">
+        <Parent guid="guidKiloCmdSet" id="KiloTopMenu" />
+      </Group>
+
+      <!-- Fallback: also place top-level command in the Tools menu -->
+      <Group guid="guidKiloCmdSet" id="KiloToolsMenuFallback" priority="0x0800">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_TOOLS" />
+      </Group>
+
+      <!-- Editor context menu group (right-click in code editor) -->
+      <Group guid="guidKiloCmdSet" id="KiloEditorContextGroup" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN" />
+      </Group>
+
+      <!-- Solution Explorer context menu group -->
+      <Group guid="guidKiloCmdSet" id="KiloSolExpContextGroup" priority="0x0400">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE" />
+      </Group>
+    </Groups>
+
+    <!-- ── Menus ───────────────────────────────────────────────────────────── -->
+    <Menus>
+      <!-- Top-level "Kilo" menu in the menu bar -->
+      <Menu guid="guidKiloCmdSet" id="KiloTopMenu" priority="0x700" type="Menu">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_TOOLSADDINS" />
+        <Strings>
+          <ButtonText>Kilo</ButtonText>
+        </Strings>
+      </Menu>
+    </Menus>
+
+    <!-- ── Buttons ─────────────────────────────────────────────────────────── -->
+    <Buttons>
+
+      <!-- ── Assistant / Session commands ──────────────────────────────────── -->
+
+      <!-- Open Kilo Assistant (main tool window) -->
+      <Button guid="guidKiloCmdSet" id="cmdidOpenAssistant" priority="0x0100" type="Button">
+        <Parent guid="guidKiloCmdSet" id="KiloAssistantGroup" />
+        <Strings>
+          <ButtonText>Open Kilo Assistant</ButtonText>
+          <LocCanonicalName>Kilo.OpenAssistant</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <!-- Ask about selection -->
+      <Button guid="guidKiloCmdSet" id="cmdidAskSelection" priority="0x0110" type="Button">
+        <Parent guid="guidKiloCmdSet" id="KiloAssistantGroup" />
+        <Strings>
+          <ButtonText>Ask Kilo About Selection</ButtonText>
+          <LocCanonicalName>Kilo.AskSelection</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <!-- Ask about file -->
+      <Button guid="guidKiloCmdSet" id="cmdidAskFile" priority="0x0120" type="Button">
+        <Parent guid="guidKiloCmdSet" id="KiloAssistantGroup" />
+        <Strings>
+          <ButtonText>Ask Kilo About Current File</ButtonText>
+          <LocCanonicalName>Kilo.AskFile</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <!-- New Session -->
+      <Button guid="guidKiloCmdSet" id="cmdidNewSession" priority="0x0130" type="Button">
+        <Parent guid="guidKiloCmdSet" id="KiloAssistantGroup" />
+        <Strings>
+          <ButtonText>New Session</ButtonText>
+          <LocCanonicalName>Kilo.NewSession</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <!-- Cycle Agent Mode -->
+      <Button guid="guidKiloCmdSet" id="cmdidCycleAgentMode" priority="0x0140" type="Button">
+        <Parent guid="guidKiloCmdSet" id="KiloAssistantGroup" />
+        <Strings>
+          <ButtonText>Cycle Agent Mode</ButtonText>
+          <LocCanonicalName>Kilo.CycleAgentMode</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <!-- ── Tools / Viewers ───────────────────────────────────────────────── -->
+
+      <!-- Open Diff Viewer -->
+      <Button guid="guidKiloCmdSet" id="cmdidOpenDiffViewer" priority="0x0200" type="Button">
+        <Parent guid="guidKiloCmdSet" id="KiloToolsGroup" />
+        <Strings>
+          <ButtonText>Diff Viewer</ButtonText>
+          <LocCanonicalName>Kilo.OpenDiffViewer</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <!-- Session History -->
+      <Button guid="guidKiloCmdSet" id="cmdidOpenSessionHistory" priority="0x0210" type="Button">
+        <Parent guid="guidKiloCmdSet" id="KiloToolsGroup" />
+        <Strings>
+          <ButtonText>Session History</ButtonText>
+          <LocCanonicalName>Kilo.OpenSessionHistory</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <!-- Open Automation -->
+      <Button guid="guidKiloCmdSet" id="cmdidOpenAutomation" priority="0x0220" type="Button">
+        <Parent guid="guidKiloCmdSet" id="KiloToolsGroup" />
+        <Strings>
+          <ButtonText>Automation</ButtonText>
+          <LocCanonicalName>Kilo.OpenAutomation</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <!-- Kilo Settings -->
+      <Button guid="guidKiloCmdSet" id="cmdidOpenSettings" priority="0x0230" type="Button">
+        <Parent guid="guidKiloCmdSet" id="KiloToolsGroup" />
+        <Strings>
+          <ButtonText>Settings</ButtonText>
+          <LocCanonicalName>Kilo.OpenSettings</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <!-- Open Extension Log -->
+      <Button guid="guidKiloCmdSet" id="cmdidOpenExtensionLog" priority="0x0240" type="Button">
+        <Parent guid="guidKiloCmdSet" id="KiloToolsGroup" />
+        <Strings>
+          <ButtonText>Extension Log</ButtonText>
+          <LocCanonicalName>Kilo.OpenExtensionLog</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <!-- ── Agent commands ────────────────────────────────────────────────── -->
+
+      <!-- Agent Manager -->
+      <Button guid="guidKiloCmdSet" id="cmdidOpenAgentManager" priority="0x0300" type="Button">
+        <Parent guid="guidKiloCmdSet" id="KiloAgentsGroup" />
+        <Strings>
+          <ButtonText>Agent Manager</ButtonText>
+          <LocCanonicalName>Kilo.OpenAgentManager</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <!-- Sub-Agent Viewer -->
+      <Button guid="guidKiloCmdSet" id="cmdidOpenSubAgentViewer" priority="0x0310" type="Button">
+        <Parent guid="guidKiloCmdSet" id="KiloAgentsGroup" />
+        <Strings>
+          <ButtonText>Sub-Agent Viewer</ButtonText>
+          <LocCanonicalName>Kilo.OpenSubAgentViewer</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <!-- ── Editor context menu commands ──────────────────────────────────── -->
+
+      <!-- Ask about selection (editor context menu) -->
+      <Button guid="guidKiloCmdSet" id="cmdidAskSelectionCtx" priority="0x0100" type="Button">
+        <Parent guid="guidKiloCmdSet" id="KiloEditorContextGroup" />
+        <Strings>
+          <ButtonText>Ask Kilo About Selection</ButtonText>
+          <LocCanonicalName>Kilo.AskSelectionContext</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <!-- Ask about file (editor context menu) -->
+      <Button guid="guidKiloCmdSet" id="cmdidAskFileCtx" priority="0x0110" type="Button">
+        <Parent guid="guidKiloCmdSet" id="KiloEditorContextGroup" />
+        <Strings>
+          <ButtonText>Ask Kilo About This File</ButtonText>
+          <LocCanonicalName>Kilo.AskFileContext</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <!-- Ask about file (Solution Explorer context menu) -->
+      <Button guid="guidKiloCmdSet" id="cmdidAskFileSolExp" priority="0x0100" type="Button">
+        <Parent guid="guidKiloCmdSet" id="KiloSolExpContextGroup" />
+        <Strings>
+          <ButtonText>Ask Kilo About This File</ButtonText>
+          <LocCanonicalName>Kilo.AskFileSolutionExplorer</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <!-- Tools menu fallback: Open Kilo Assistant -->
+      <Button guid="guidKiloCmdSet" id="cmdidOpenAssistantTools" priority="0x0100" type="Button">
+        <Parent guid="guidKiloCmdSet" id="KiloToolsMenuFallback" />
+        <Strings>
+          <ButtonText>Open Kilo Assistant</ButtonText>
+          <LocCanonicalName>Kilo.OpenAssistantTools</LocCanonicalName>
+        </Strings>
+      </Button>
+
+    </Buttons>
+
   </Commands>
 
-  <Bitmaps>
-    <Bitmap guid="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" href="Resources\Kilo16.png" usedList="bmp_16x16" />
-  </Bitmaps>
+  <!-- ── Key Bindings (top-level, NOT nested in Buttons) ──────────────────── -->
+  <!-- Using chord shortcuts (Ctrl+K, Ctrl+X) to avoid conflicts with built-in VS shortcuts -->
+  <KeyBindings>
+    <!-- Ctrl+K, Ctrl+K — Open Kilo Assistant -->
+    <KeyBinding guid="guidKiloCmdSet" id="cmdidOpenAssistant"
+                editor="guidVSStd97" key1="K" mod1="Control" key2="K" mod2="Control" />
 
-  <Menus />
+    <!-- Ctrl+K, Ctrl+A — Ask about selection -->
+    <KeyBinding guid="guidKiloCmdSet" id="cmdidAskSelection"
+                editor="guidVSStd97" key1="K" mod1="Control" key2="A" mod2="Control" />
 
+    <!-- Ctrl+K, Ctrl+F — Ask about file -->
+    <KeyBinding guid="guidKiloCmdSet" id="cmdidAskFile"
+                editor="guidVSStd97" key1="K" mod1="Control" key2="F" mod2="Control" />
+
+    <!-- Ctrl+K, Ctrl+H — Session History -->
+    <KeyBinding guid="guidKiloCmdSet" id="cmdidOpenSessionHistory"
+                editor="guidVSStd97" key1="K" mod1="Control" key2="H" mod2="Control" />
+
+    <!-- Ctrl+K, Ctrl+S — Settings -->
+    <KeyBinding guid="guidKiloCmdSet" id="cmdidOpenSettings"
+                editor="guidVSStd97" key1="K" mod1="Control" key2="S" mod2="Control" />
+
+    <!-- Ctrl+K, Ctrl+M — Cycle Agent Mode -->
+    <KeyBinding guid="guidKiloCmdSet" id="cmdidCycleAgentMode"
+                editor="guidVSStd97" key1="K" mod1="Control" key2="M" mod2="Control" />
+
+    <!-- Ctrl+K, Ctrl+N — New Session -->
+    <KeyBinding guid="guidKiloCmdSet" id="cmdidNewSession"
+                editor="guidVSStd97" key1="K" mod1="Control" key2="N" mod2="Control" />
+
+    <!-- Ctrl+K, Ctrl+U — Automation -->
+    <KeyBinding guid="guidKiloCmdSet" id="cmdidOpenAutomation"
+                editor="guidVSStd97" key1="K" mod1="Control" key2="U" mod2="Control" />
+
+    <!-- Ctrl+K, Ctrl+G — Agent Manager -->
+    <KeyBinding guid="guidKiloCmdSet" id="cmdidOpenAgentManager"
+                editor="guidVSStd97" key1="K" mod1="Control" key2="G" mod2="Control" />
+
+    <!-- Ctrl+K, Ctrl+V — Sub-Agent Viewer -->
+    <KeyBinding guid="guidKiloCmdSet" id="cmdidOpenSubAgentViewer"
+                editor="guidVSStd97" key1="K" mod1="Control" key2="V" mod2="Control" />
+  </KeyBindings>
+
+  <!-- ── Symbols ───────────────────────────────────────────────────────────── -->
   <Symbols>
-    <GuidSymbol name="guidKiloPackage" value="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}">
-      <IDSymbol name="cmdidOpenAssistantToolWindow" value="0x0100" />
+    <GuidSymbol name="guidKiloPackage" value="{3f60a1dd-6f2e-4aaf-8ef6-497f36cf3b27}" />
+
+    <GuidSymbol name="guidKiloCmdSet" value="{a8e74b2d-5f31-4c89-b6d2-1e3f4a5b6c7d}">
+      <!-- Menus -->
+      <IDSymbol name="KiloTopMenu" value="0x1000" />
+
+      <!-- Groups -->
+      <IDSymbol name="KiloTopMenuGroup" value="0x1020" />
+      <IDSymbol name="KiloAssistantGroup" value="0x1030" />
+      <IDSymbol name="KiloToolsGroup" value="0x1040" />
+      <IDSymbol name="KiloAgentsGroup" value="0x1050" />
+      <IDSymbol name="KiloToolsMenuFallback" value="0x1080" />
+      <IDSymbol name="KiloEditorContextGroup" value="0x1060" />
+      <IDSymbol name="KiloSolExpContextGroup" value="0x1070" />
+
+      <!-- Main commands -->
+      <IDSymbol name="cmdidOpenAssistant" value="0x0100" />
       <IDSymbol name="cmdidAskSelection" value="0x0101" />
       <IDSymbol name="cmdidAskFile" value="0x0102" />
       <IDSymbol name="cmdidOpenDiffViewer" value="0x0103" />
@@ -155,10 +284,17 @@
       <IDSymbol name="cmdidOpenSettings" value="0x0105" />
       <IDSymbol name="cmdidCycleAgentMode" value="0x0107" />
       <IDSymbol name="cmdidNewSession" value="0x0109" />
-      <IDSymbol name="cmdidOpenAutomationToolWindow" value="0x010A" />
+      <IDSymbol name="cmdidOpenAutomation" value="0x010A" />
       <IDSymbol name="cmdidOpenAgentManager" value="0x010B" />
       <IDSymbol name="cmdidOpenSubAgentViewer" value="0x010C" />
-      <IDSymbol name="bmpKilo16" value="0x0101" />
+      <IDSymbol name="cmdidOpenExtensionLog" value="0x010D" />
+
+      <!-- Context menu duplicates -->
+      <IDSymbol name="cmdidAskSelectionCtx" value="0x0200" />
+      <IDSymbol name="cmdidAskFileCtx" value="0x0201" />
+      <IDSymbol name="cmdidAskFileSolExp" value="0x0202" />
+      <IDSymbol name="cmdidOpenAssistantTools" value="0x0203" />
     </GuidSymbol>
   </Symbols>
+
 </CommandTable>
